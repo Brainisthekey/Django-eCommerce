@@ -28,7 +28,8 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'e-commerce-website'
+    'e-commerce-website',
+    'core'
 ]
 
 MIDDLEWARE = [
@@ -92,3 +93,5 @@ if ENVIRONMENT == 'production':
 
 
 SITE_ID = 1
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static_in_env')]

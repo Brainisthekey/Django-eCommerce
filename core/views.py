@@ -7,4 +7,4 @@ def item_list(request):
     context = {
         'items': item_objects
     }
-    return render(request, "items_list.html", context=context)
+    return render(request, "home-page.html", context=context)
