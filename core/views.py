@@ -1,20 +1,19 @@
 from django.shortcuts import render
+from django.views.generic.detail import DetailView
 from core.models import Item
+from django.views.generic import ListView, DeleteView
 
-
-def item_list(request):
-    item_objects = Item.objects.all()
-    context = {
-        'items': item_objects
-    }
-    return render(request, "product-page.html", context=context)
 
 def checkout(request):
     return render(request, 'chekout-page.html')
 
-def home(request):
-    item_objects = Item.objects.all()
-    context = {
-        'items': item_objects
-    }
-    return render(request, 'home-page.html', context=context)
+class HomeView(ListView):
+    
+    model = Item
+    template_name = 'home-page.html'
+    context_object_name = 'items'
+
+class ItemDetailView(DetailView):
+
+    model = Item
+    template_name = 'product-page.html'
