@@ -58,17 +58,17 @@ def add_to_cart(request, slug):
             order_item.quantity += 1
             order_item.save()
             messages.info(request, "This item quantity was updated")
-            return redirect('core:product', slug=slug)
+            return redirect('core:order-summary')
         else:
             order.items.add(order_item)
             messages.info(request, "This item was aded tou your cart")
-            return redirect('core:product', slug=slug)
+            return redirect('core:order-summary')
     else:
         ordered_date = timezone.now()
         order = Order.objects.create(user=request.user, ordered_date=ordered_date)
         order.items.add(order_item)
         messages.info(request, "This item was aded tou your cart")
-        return redirect('core:product', slug=slug)
+        return redirect('core:order-summary')
 
 @login_required
 def remove_from_cart(request, slug):

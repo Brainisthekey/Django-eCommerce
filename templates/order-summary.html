@@ -24,7 +24,7 @@
                   <td>
                       <a href="{% url 'core:remove_single_item_from_cart' order_item.item.slug %}"><i class="fas fa-minus mr-2"></i></a>
                       {{ order_item.quantity }}
-                      <a><i class="fas fa-plus ml-2"></i></a>
+                      <a href="{% url 'core:add-to-cart' order_item.item.slug %}"><i class="fas fa-plus ml-2"></i></a>
                   </td>
                   <td>
                       {% if order_item.item.discount_price %}
