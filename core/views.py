@@ -11,7 +11,7 @@ def checkout(request):
 class HomeView(ListView):
     
     model = Item
-    paginate_by = 1
+    paginate_by = 2
     template_name = 'home-page.html'
     context_object_name = 'items'
 
