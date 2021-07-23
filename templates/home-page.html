@@ -1,8 +1,8 @@
+{% extends "base.html" %}
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
-
+{% block content %}
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -48,7 +48,6 @@
 </head>
 
 <body>
-
   <!-- Navbar -->
   <nav class="navbar fixed-top navbar-expand-lg navbar-light white scrolling-navbar">
     <div class="container">
@@ -89,10 +88,20 @@
               <span class="clearfix d-none d-sm-inline-block"> Cart </span>
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'account_logout' %}">
+              <span class="clearfix d-none d-sm-inline-block"> Logout </span>
+            </a>
+          </li>
           {% else %}
           <li class="nav-item">
-            <a class="nav-link waves-effect" href="{% url 'account_login'">
+            <a class="nav-link waves-effect" href="{% url 'account_login' %}">
               <span class="clearfix d-none d-sm-inline-block"> Login </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'account_signup' %}">
+              <span class="clearfix d-none d-sm-inline-block"> Signup </span>
             </a>
           </li>
           {% endif %}
@@ -101,9 +110,6 @@
 
     </div>
   </nav>
-  <br>
-  <br>
-  <br>
   <main>
     <div class="container">
 
@@ -250,6 +256,7 @@
 
     </div>
   </main>
+  {% endblock content %}
   <!--Main layout-->
 
   <!--Footer-->
