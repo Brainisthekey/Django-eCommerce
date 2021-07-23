@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.contrib import messages
 
 def checkout(request):
-    return render(request, 'chekout-page.html')
+    return render(request, 'checkout-page.html')
 
 class HomeView(ListView):
     
