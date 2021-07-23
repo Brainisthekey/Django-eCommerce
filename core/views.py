@@ -7,9 +7,23 @@ from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from core.forms import CheckkOutForm
 
-def checkout(request):
-    return render(request, 'checkout-page.html')
+class CheckoutView(View):
+    def get(self, *args, **kwargs):
+        # We need the form to paste to the context
+        form = CheckkOutForm()
+        context = {
+            'form' : form
+        }
+        return render(self.request, 'checkout-page.html', context=context)
+
+    def post(self, *args, **kwargs):
+        form = CheckkOutForm(self.request.POST or None)
+        if form.is_valid():
+            print('Form is valid')
+            return redirect('core:checkout')
+
 
 class HomeView(ListView):
     
@@ -124,4 +138,3 @@ def remove_single_item_from_cart(request, slug):
         # add a message saying the user doesn't have an order
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
-        
