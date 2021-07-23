@@ -124,3 +124,4 @@ def remove_single_item_from_cart(request, slug):
         # add a message saying the user doesn't have an order
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
+        

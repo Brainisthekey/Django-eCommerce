@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'e-commerce-website',
     'core',
+    'django_countries'
 ]
 
 MIDDLEWARE = [
