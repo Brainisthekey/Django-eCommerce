@@ -20,9 +20,11 @@ class CheckoutView(View):
 
     def post(self, *args, **kwargs):
         form = CheckkOutForm(self.request.POST or None)
+        #Thank for this print we can see the actual data what we posted into request
         if form.is_valid():
-            print('Form is valid')
             return redirect('core:checkout')
+        messages.warning(self.request, "Failed Checkout")
+        return redirect('core:checkout')
 
 
 class HomeView(ListView):
