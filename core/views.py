@@ -86,10 +86,10 @@ def remove_from_cart(request, slug):
             )[0]
             order.items.remove(order_item)
             messages.info(request, "This item was removed from your cart")
-            return redirect('core:product', slug=slug)
+            return redirect('core:order-summary')
         else:
             messages.info(request, "This item was not in your cart")
-            return redirect('core:product', slug=slug)
+            return redirect('core:order-summary', slug=slug)
     else:
         # add a message saying the user doesn't have an order
         messages.info(request, "You do not have an active order yet")
@@ -110,8 +110,11 @@ def remove_single_item_from_cart(request, slug):
                 user=request.user,
                 ordered=False
             )[0]
-            order_item.quantity -= 1
-            order_item.save()
+            if order_item.quantity > 1:
+                order_item.quantity -= 1
+                order_item.save()
+            else:
+                order.items.remove(order_item)
             messages.info(request, "This item quantity has been changed")
             return redirect('core:order-summary')
         else:
