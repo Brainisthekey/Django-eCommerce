@@ -94,3 +94,30 @@ def remove_from_cart(request, slug):
         # add a message saying the user doesn't have an order
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
+
+
+@login_required
+def remove_single_item_from_cart(request, slug):
+
+    item = get_object_or_404(Item, slug=slug)
+    order_queryset = Order.objects.filter(user=request.user, ordered=False)
+    if order_queryset.exists():
+        order = order_queryset[0]
+        # Check if the order item is in the order
+        if order.items.filter(item__slug=item.slug).exists():
+            order_item = OrderItem.objects.get_or_create(
+                item=item,
+                user=request.user,
+                ordered=False
+            )[0]
+            order_item.quantity -= 1
+            order_item.save()
+            messages.info(request, "This item quantity has been changed")
+            return redirect('core:order-summary')
+        else:
+            messages.info(request, "This item was not in your cart")
+            return redirect('core:product', slug=slug)
+    else:
+        # add a message saying the user doesn't have an order
+        messages.info(request, "You do not have an active order yet")
+        return redirect('core:product', slug=slug)
