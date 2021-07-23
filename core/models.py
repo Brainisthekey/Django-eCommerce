@@ -76,6 +76,7 @@ class Order(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     ordered_date = models.DateTimeField()
     ordered = models.BooleanField(default=False)
+    #Attention for this
     billing_adress = models.ForeignKey('BillingAdress', on_delete=models.SET_NULL, null=True, blank=True)
 
     def get_total(self):
@@ -95,7 +96,7 @@ class BillingAdress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     street_adress = models.CharField(max_length=100)
     apartment_adress = models.CharField(max_length=100)
-    countries = CountryField(multiple=True)
+    country = CountryField(multiple=False)
     zip = models.CharField(max_length=100)
 
     def __str__(self):

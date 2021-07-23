@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
-from core.models import Item, OrderItem, Order
+from core.models import Item, OrderItem, Order, BillingAdress
 from django.views.generic import ListView, View
 from django.utils import timezone
 from django.contrib import messages
@@ -9,19 +9,63 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm
 
+
 class CheckoutView(View):
     def get(self, *args, **kwargs):
         # We need the form to paste to the context
         form = CheckkOutForm()
         context = {
-            'form' : form
+            'form': form
         }
         return render(self.request, 'checkout-page.html', context=context)
 
     def post(self, *args, **kwargs):
         form = CheckkOutForm(self.request.POST or None)
+        try:
+            order = Order.objects.get(user=self.request.user, ordered=False)
+            if form.is_valid():
+                street_adress = form.cleaned_data.get('street_adress')
+                apartment_adress = form.cleaned_data.get('apartment_adress')
+                country = form.cleaned_data.get('country')
+                zip = form.cleaned_data.get('zip')
+                # TODO add fucntionality to this fields
+                # same_shipping_adress = form.cleaned_data.get('same_shipping_adress')
+                # save_info = form.cleaned_data.get('save_info')
+                payment_option = form.cleaned_data.get('payment_option')
+                billing_adress = BillingAdress(
+                    user=self.request.user,
+                    street_adress=street_adress,
+                    apartment_adress=apartment_adress,
+                    countries=country,
+                    zip=zip
+                )
+                billing_adress.save()
+                order.billing_adress = billing_adress
+                order.save()
+                # TODO add redirect to the selected payment option
+                return redirect('core:checkout')
+            messages.warning(self.request, "Failed Checkout")
+            return redirect('core:checkout')
+        except ObjectDoesNotExist:
+            messages.error(self.request, 'User do not have an active order')
+            return redirect("core:order-summary")
         #Thank for this print we can see the actual data what we posted into request
         if form.is_valid():
+            street_adress = form.cleaned_data.get('street_adress')
+            apartment_adress = form.cleaned_data.get('apartment_adress')
+            country = form.cleaned_data.get('country')
+            zip = form.cleaned_data.get('zip')
+            same_billing_adress = form.cleaned_data.get('same_billing_adress')
+            save_info = form.cleaned_data.get('save_info')
+            payment_option = form.cleaned_data.get('payment_option')
+            billing_adress = BillingAdress(
+                user=self.request.user,
+                street_adress=street_adress,
+                apartment_adress=apartment_adress,
+                countries=country,
+                zip=zip
+            )
+            billing_adress.save()
             return redirect('core:checkout')
         messages.warning(self.request, "Failed Checkout")
         return redirect('core:checkout')
