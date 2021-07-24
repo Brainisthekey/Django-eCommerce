@@ -10,10 +10,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm, CouponForm
 
 
-class CheckoutView(View):
+class CheckoutView(LoginRequiredMixin, View):
+    
     def get(self, *args, **kwargs):
         try:
             order_queryset = Order.objects.get(user=self.request.user, ordered=False)
+            print(order_queryset)
             form = CheckkOutForm()
             context = {
                 'form': form,
@@ -23,7 +25,7 @@ class CheckoutView(View):
             return render(self.request, "checkout-page.html", context=context)
         except ObjectDoesNotExist:
             messages.info(self.request, "You do not have an active order")
-            return redirect("core:checkout")
+            return redirect("/")
 
     def post(self, *args, **kwargs):
         form = CheckkOutForm(self.request.POST or None)
@@ -112,8 +114,6 @@ def add_to_cart(request, slug):
             return redirect('core:order-summary')
         else:
             order.items.add(order_item)
-            order_item.quantity += 1
-            order_item.save()
             messages.info(request, "This item was aded tou your cart")
             return redirect('core:order-summary')
     else:
@@ -132,14 +132,13 @@ def remove_from_cart(request, slug):
         order = order_queryset[0]
         # Check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
-            order_item = OrderItem.objects.get_or_create(
+            order_item = OrderItem.objects.filter(
                 item=item,
                 user=request.user,
                 ordered=False
             )[0]
-            order_item.quantity = 0
-            order_item.save()
             order.items.remove(order_item)
+            order_item.delete()
             messages.info(request, "This item was removed from your cart")
             return redirect('core:order-summary')
         else:
@@ -160,7 +159,7 @@ def remove_single_item_from_cart(request, slug):
         order = order_queryset[0]
         # Check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
-            order_item = OrderItem.objects.get_or_create(
+            order_item = OrderItem.objects.filter(
                 item=item,
                 user=request.user,
                 ordered=False
