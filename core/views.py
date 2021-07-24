@@ -187,7 +187,10 @@ def get_coupon(request, code):
 def add_coupon(request, code):
     try:
         order_queryset = Order.objects.get(user=request.user, ordered=False)
-        coupon = get_coupon(request, code)
+        order_queryset.coupon = get_coupon(request, code)
+        order.save()
+        messages.success(request, "This coupon was successfully added to your order")
+        return redirect("core:checkout")
     except ObjectDoesNotExist:
         messages.info(request, "You do not have an active order")
         return redirect("core:checkout")
