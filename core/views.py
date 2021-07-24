@@ -44,7 +44,7 @@ class CheckoutView(LoginRequiredMixin, View):
                     user=self.request.user,
                     street_adress=street_adress,
                     apartment_adress=apartment_adress,
-                    countries=country,
+                    country=country,
                     zip=zip
                 )
                 billing_adress.save()

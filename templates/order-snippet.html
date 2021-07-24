@@ -13,7 +13,7 @@
         <span class="text-muted">${{ order_item.get_finall_price }}</span>
     </li>
     {% endfor %}
-    {% if order.coupon %}
+    {% if order.coupon and order.items.all %}
     <li class="list-group-item d-flex justify-content-between bg-light">
         <div class="text-success">
         <h6 class="my-0">Promo code</h6>
