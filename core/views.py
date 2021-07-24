@@ -22,6 +22,23 @@ class CheckoutView(LoginRequiredMixin, View):
                 'couponform': CouponForm(),
                 'order': order_queryset
             }
+
+            shipping_address_qs = Adress.objects.filter(
+                user=self.request.user,
+                adress_type='S',
+                default=True
+            )
+            if shipping_address_qs.exists():
+                context.update({'default_shipping_address': shipping_address_qs[0]})
+
+            billing_address_qs = Adress.objects.filter(
+                user=self.request.user,
+                adress_type='B',
+                default=True
+            )
+            if shipping_address_qs.exists():
+                context.update({'default_billing_address': billing_address_qs[0]})
+
             return render(self.request, "checkout-page.html", context=context)
         except ObjectDoesNotExist:
             messages.info(self.request, "You do not have an active order")
@@ -36,9 +53,6 @@ class CheckoutView(LoginRequiredMixin, View):
                 apartment_adress = form.cleaned_data.get('apartment_adress')
                 country = form.cleaned_data.get('country')
                 zip = form.cleaned_data.get('zip')
-                # TODO add fucntionality to this fields
-                # same_shipping_adress = form.cleaned_data.get('same_shipping_adress')
-                # save_info = form.cleaned_data.get('save_info')
                 payment_option = form.cleaned_data.get('payment_option')
                 billing_adress = Adress(
                     user=self.request.user,
