@@ -42,34 +42,19 @@ class CheckoutView(View):
                 billing_adress.save()
                 order.billing_adress = billing_adress
                 order.save()
-                # TODO add redirect to the selected payment option
+                # TODO: add redirect to the selected payment option
                 return redirect('core:checkout')
             messages.warning(self.request, "Failed Checkout")
             return redirect('core:checkout')
         except ObjectDoesNotExist:
             messages.error(self.request, 'User do not have an active order')
             return redirect("core:order-summary")
-        #Thank for this print we can see the actual data what we posted into request
-        if form.is_valid():
-            street_adress = form.cleaned_data.get('street_adress')
-            apartment_adress = form.cleaned_data.get('apartment_adress')
-            country = form.cleaned_data.get('country')
-            zip = form.cleaned_data.get('zip')
-            same_billing_adress = form.cleaned_data.get('same_billing_adress')
-            save_info = form.cleaned_data.get('save_info')
-            payment_option = form.cleaned_data.get('payment_option')
-            billing_adress = BillingAdress(
-                user=self.request.user,
-                street_adress=street_adress,
-                apartment_adress=apartment_adress,
-                countries=country,
-                zip=zip
-            )
-            billing_adress.save()
-            return redirect('core:checkout')
-        messages.warning(self.request, "Failed Checkout")
-        return redirect('core:checkout')
 
+
+class PaymentView(View):
+
+    def get(self, *args, **kwargs):
+        return render(self.request, 'payment.html')
 
 class HomeView(ListView):
     
