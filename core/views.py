@@ -7,17 +7,23 @@ from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from core.forms import CheckkOutForm
+from core.forms import CheckkOutForm, CouponForm
 
 
 class CheckoutView(View):
     def get(self, *args, **kwargs):
-        # We need the form to paste to the context
-        form = CheckkOutForm()
-        context = {
-            'form': form
-        }
-        return render(self.request, 'checkout-page.html', context=context)
+        try:
+            order_queryset = Order.objects.get(user=self.request.user, ordered=False)
+            form = CheckkOutForm()
+            context = {
+                'form': form,
+                'couponform': CouponForm(),
+                'order': order_queryset
+            }
+            return render(self.request, "checkout-page.html", context=context)
+        except ObjectDoesNotExist:
+            messages.info(self.request, "You do not have an active order")
+            return redirect("core:checkout")
 
     def post(self, *args, **kwargs):
         form = CheckkOutForm(self.request.POST or None)
@@ -184,13 +190,19 @@ def get_coupon(request, code):
         return redirect("core:checkout")
 
 
-def add_coupon(request, code):
-    try:
-        order_queryset = Order.objects.get(user=request.user, ordered=False)
-        order_queryset.coupon = get_coupon(request, code)
-        order.save()
-        messages.success(request, "This coupon was successfully added to your order")
-        return redirect("core:checkout")
-    except ObjectDoesNotExist:
-        messages.info(request, "You do not have an active order")
-        return redirect("core:checkout")
+def add_coupon(request):
+    if request.method == 'POST':
+        form = CouponForm(request.POST or None)
+        if form.is_valid():
+            try:
+                code = form.cleaned_data.get('code')
+                order = Order.objects.get(user=request.user, ordered=False)
+                order.coupon = get_coupon(request, code)
+                order.save()
+                messages.success(request, "This coupon was successfully added to your order")
+                return redirect("core:checkout")
+            except ObjectDoesNotExist:
+                messages.info(request, "You do not have an active order")
+                return redirect("core:checkout")
+    # TODO: raise error
+    return None
