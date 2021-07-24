@@ -12,6 +12,7 @@ from core.forms import CheckkOutForm, CouponForm
 
 
 
+
 def is_valid_form(values):
     valid = True
     for field in values:
@@ -173,7 +174,7 @@ class PaymentView(View):
 class HomeView(ListView):
     
     model = Item
-    paginate_by = 2
+    paginate_by = 5
     template_name = 'home-page.html'
     context_object_name = 'items'
 
