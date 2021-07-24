@@ -16,6 +16,11 @@ LABEL_CHOICES = (
     ('D', 'danger')
 )
 
+ADRESS_CHOICES = (
+    ('B', 'Billing'),
+    ('S', 'Shipping'),
+)
+
 
 class Item(models.Model):
 
@@ -78,7 +83,8 @@ class Order(models.Model):
     ordered_date = models.DateTimeField()
     ordered = models.BooleanField(default=False)
     #Attention for this
-    billing_adress = models.ForeignKey('BillingAdress', on_delete=models.SET_NULL, null=True, blank=True)
+    billing_adress = models.ForeignKey('Adress', on_delete=models.SET_NULL, null=True, blank=True, related_name='billing_adress')
+    shipping_adress = models.ForeignKey('Adress', on_delete=models.SET_NULL, null=True, blank=True, related_name='shipping_adress')
     coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True)
 
     def get_total(self):
@@ -94,7 +100,7 @@ class Order(models.Model):
         return self.user.username
         
 
-class BillingAdress(models.Model):
+class Adress(models.Model):
 
     #This ForeginKey just connect this field with the auth user
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -102,6 +108,11 @@ class BillingAdress(models.Model):
     apartment_adress = models.CharField(max_length=100)
     country = CountryField(multiple=False)
     zip = models.CharField(max_length=100)
+    adress_type = models.CharField(max_length=1, choices=ADRESS_CHOICES)
+    default = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "Adressess"
 
     def __str__(self):
         return self.user.username

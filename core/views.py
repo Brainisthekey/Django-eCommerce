@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
-from core.models import Item, OrderItem, Order, BillingAdress, Coupon
+from core.models import Item, OrderItem, Order, Adress, Coupon
 from django.views.generic import ListView, View
 from django.utils import timezone
 from django.contrib import messages
@@ -40,12 +40,13 @@ class CheckoutView(LoginRequiredMixin, View):
                 # same_shipping_adress = form.cleaned_data.get('same_shipping_adress')
                 # save_info = form.cleaned_data.get('save_info')
                 payment_option = form.cleaned_data.get('payment_option')
-                billing_adress = BillingAdress(
+                billing_adress = Adress(
                     user=self.request.user,
                     street_adress=street_adress,
                     apartment_adress=apartment_adress,
                     country=country,
-                    zip=zip
+                    zip=zip,
+                    adress_type='B'
                 )
                 billing_adress.save()
                 order.billing_adress = billing_adress
