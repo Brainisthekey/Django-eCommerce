@@ -26,6 +26,7 @@ class Item(models.Model):
     category = models.CharField(choices=CATEGORY_CHOICES, max_length=1)
     lable = models.CharField(choices=LABEL_CHOICES, max_length=1)
     slug = models.SlugField()
+    image = models.ImageField()
 
     def get_absolute_url(self):
         return reverse('core:product', kwargs={
@@ -78,6 +79,7 @@ class Order(models.Model):
     ordered = models.BooleanField(default=False)
     #Attention for this
     billing_adress = models.ForeignKey('BillingAdress', on_delete=models.SET_NULL, null=True, blank=True)
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True)
 
     def get_total(self):
         total = 0
@@ -101,3 +103,11 @@ class BillingAdress(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class Coupon(models.Model):
+
+    code = models.CharField(max_length=15)
+
+    def __str__(self):
+        return self.code

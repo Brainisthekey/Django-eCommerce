@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
-from core.models import Item, OrderItem, Order, BillingAdress
+from core.models import Item, OrderItem, Order, BillingAdress, Coupon
 from django.views.generic import ListView, View
 from django.utils import timezone
 from django.contrib import messages
@@ -106,6 +106,8 @@ def add_to_cart(request, slug):
             return redirect('core:order-summary')
         else:
             order.items.add(order_item)
+            order_item.quantity += 1
+            order_item.save()
             messages.info(request, "This item was aded tou your cart")
             return redirect('core:order-summary')
     else:
@@ -129,6 +131,8 @@ def remove_from_cart(request, slug):
                 user=request.user,
                 ordered=False
             )[0]
+            order_item.quantity = 0
+            order_item.save()
             order.items.remove(order_item)
             messages.info(request, "This item was removed from your cart")
             return redirect('core:order-summary')
@@ -169,3 +173,21 @@ def remove_single_item_from_cart(request, slug):
         # add a message saying the user doesn't have an order
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
+
+
+def get_coupon(request, code):
+    try:
+        coupon = Coupon.objects.get(code=code)
+        return coupon
+    except ObjectDoesNotExist:
+        messages.info(request, "This coupon does not exist")
+        return redirect("core:checkout")
+
+
+def add_coupon(request, code):
+    try:
+        order_queryset = Order.objects.get(user=request.user, ordered=False)
+        coupon = get_coupon(request, code)
+    except ObjectDoesNotExist:
+        messages.info(request, "You do not have an active order")
+        return redirect("core:checkout")
