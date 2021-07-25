@@ -10,7 +10,7 @@
         <!--Grid column-->
         <div class="col-md-6 mb-4">
 
-          <img src="https://mdbootstrap.com/img/Photos/Horizontal/E-commerce/Products/14.jpg" class="img-fluid" alt="">
+          <img src="{{ item.image.url }}" class="img-fluid" alt="">
 
         </div>
         <!--Grid column-->
@@ -22,11 +22,8 @@
           <div class="p-4">
 
             <div class="mb-3">
-              <a href="">
-                <span class="badge purple mr-1">{{ object.get_category_display }}</span>
-              </a>
+              <h2><b>{{ object.title }}</b><span class="badge purple mr-1">{{ object.get_category_display }}</span></h2>
             </div>
-
             <p class="lead">
               {% if object.discount_price %}
                 <span class="mr-1">
@@ -74,11 +71,12 @@
         <!--Grid column-->
         <div class="col-md-6 text-center">
 
-          <h4 class="my-4 h4">Additional information</h4>
+          <h4 class="my-4 h4">Why Is Reading Important?</h4>
 
-          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus suscipit modi sapiente illo soluta odit
-            voluptates,
-            quibusdam officia. Neque quibusdam quas a quis porro? Molestias illo neque eum in laborum.</p>
+          <p>Everything you read fills your head with new bits of information, and you never know when it might come in handy. 
+            The more knowledge you have,the better-equipped you are to tackle any challenge you’ll ever face.
+            Additionally, here’s a bit of food for thought: should you ever find yourself in dire circumstances,
+            remember that although you might lose everything else—your job, your possessions, your money, even your health—knowledge can never be taken from you.</p>
 
         </div>
         <!--Grid column-->
@@ -90,27 +88,12 @@
       <div class="row wow fadeIn">
 
         <!--Grid column-->
-        <div class="col-lg-4 col-md-12 mb-4">
 
-          <img src="https://mdbootstrap.com/img/Photos/Horizontal/E-commerce/Products/11.jpg" class="img-fluid" alt="">
-
-        </div>
-        <!--Grid column-->
+          {% load static %} <img src="{% static 'img/product-page/book_stack.jpg' %}" class="img-fluid" alt="Responsive images">
 
         <!--Grid column-->
-        <div class="col-lg-4 col-md-6 mb-4">
 
-          <img src="https://mdbootstrap.com/img/Photos/Horizontal/E-commerce/Products/12.jpg" class="img-fluid" alt="">
 
-        </div>
-        <!--Grid column-->
-
-        <!--Grid column-->
-        <div class="col-lg-4 col-md-6 mb-4">
-
-          <img src="https://mdbootstrap.com/img/Photos/Horizontal/E-commerce/Products/13.jpg" class="img-fluid" alt="">
-
-        </div>
         <!--Grid column-->
 
       </div>
