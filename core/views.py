@@ -1,3 +1,4 @@
+from typing import List
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
@@ -8,6 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm, CouponForm
+from django.db.models import Q
 
 
 
@@ -165,6 +167,9 @@ class CheckoutView(LoginRequiredMixin, View):
                     string_filed += fstring
                 items_list = string_filed.rstrip()
                 OrderDevilevered.objects.create(user=self.request.user, item_title=items_list, quantity=ordered_quantity)
+                orders.delete()
+                order_obj = Order.objects.all()
+                order_obj.delete()
                 messages.info(self.request, 'The order has been send')
                 return redirect('core:home')
             messages.warning(self.request, "Failed Checkout")
@@ -345,3 +350,13 @@ class HorrorView(View):
         return render(self.request, 'home-page.html', context=context)
 
 
+class SearchResult(ListView):
+
+    model = Item
+    template_name = 'home-page.html'
+    context_object_name = 'items'
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        items = Item.objects.filter(Q(title__icontains=query))
+        return items

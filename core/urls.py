@@ -1,5 +1,5 @@
 from django.urls import path
-from core.views import CheckoutView, HomeView, ItemDetailView, add_to_cart, remove_from_cart, OrderSummaryView, remove_single_item_from_cart, PaymentView, AddCouponView, RomanceView, ClassicView, HorrorView
+from core.views import CheckoutView, HomeView, ItemDetailView, add_to_cart, remove_from_cart, OrderSummaryView, remove_single_item_from_cart, PaymentView, AddCouponView, RomanceView, ClassicView, HorrorView, SearchResult
 
 app_name = 'core'
 
@@ -16,4 +16,5 @@ urlpatterns = [
     path('romance/', RomanceView.as_view(), name='romance'),
     path('horror/', HorrorView.as_view(), name='horror'),
     path('classic/', ClassicView.as_view(), name='classic'),
+    path('search/', SearchResult.as_view(), name='search')
 ]
