@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
-from core.models import Item, OrderItem, Order, Adress, Coupon
+from core.models import Item, OrderItem, Order, Adress, Coupon, OrderDevilevered
 from django.views.generic import ListView, View
 from django.utils import timezone
 from django.contrib import messages
@@ -25,7 +25,6 @@ class CheckoutView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             order_queryset = Order.objects.get(user=self.request.user, ordered=False)
-            print(order_queryset)
             form = CheckkOutForm()
             context = {
                 'form': form,
@@ -155,10 +154,20 @@ class CheckoutView(LoginRequiredMixin, View):
                             billing_adress.save()
                     else:
                         messages.info(self.request, 'Please fill in the required billing address fields')
-
-                payment_option = form.cleaned_data.get('payment_option')
-                # TODO: add redirect to the selected payment option
-                return redirect('core:checkout')
+                orders = OrderItem.objects.all()
+                ordered_items = []
+                ordered_quantity = 0
+                for order in orders:
+                    ordered_items.append([order.quantity, order.item.title])
+                    ordered_quantity += order.quantity
+                string_filed = ''
+                for i, item in enumerate(ordered_items, 1):
+                    fstring = f'{i}. {item[1]} x {item[0]} \n'
+                    string_filed += fstring
+                items_list = string_filed.rstrip()
+                OrderDevilevered.objects.create(user=self.request.user, item_title=items_list, quantity=ordered_quantity)
+                messages.info(self.request, 'The order has been send')
+                return redirect('core:home')
             messages.warning(self.request, "Failed Checkout")
             return redirect('core:checkout')
         except ObjectDoesNotExist:
