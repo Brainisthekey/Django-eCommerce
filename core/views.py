@@ -1,4 +1,3 @@
-from typing import List
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
@@ -155,6 +154,7 @@ class CheckoutView(LoginRequiredMixin, View):
                             billing_adress.save()
                     else:
                         messages.info(self.request, 'Please fill in the required billing address fields')
+                        return redirect('core:checkout')
                 orders = OrderItem.objects.all()
                 ordered_items = []
                 ordered_quantity = 0
@@ -175,7 +175,7 @@ class CheckoutView(LoginRequiredMixin, View):
             messages.warning(self.request, "Failed Checkout")
             return redirect('core:checkout')
         except ObjectDoesNotExist:
-            messages.error(self.request, 'User do not have an active order')
+            messages.error(self.request, 'You do not have an active order')
             return redirect("core:order-summary")
 
 
@@ -201,7 +201,7 @@ class OrderSummaryView(LoginRequiredMixin, View):
             }
             return render(self.request, 'order-summary.html', context=context)
         except ObjectDoesNotExist:
-            messages.error(self.request, 'User do not have an active order')
+            messages.info(self.request, 'Your shopping cart is empty')
             return redirect("/")
 
 
@@ -213,11 +213,7 @@ class ItemDetailView(DetailView):
 @login_required
 def add_to_cart(request, slug):
     
-    #item = Item.object.filter(slug=slug).first
-    #if item: ....
-
     item = get_object_or_404(Item, slug=slug)
-    #order_item = OrderItem.objects.create(item=item) #Проблема вот здесь, так как мы создаём новый обьект в любой случае
     order_item, _ = OrderItem.objects.get_or_create(
         item=item,
         user=request.user,
@@ -226,7 +222,6 @@ def add_to_cart(request, slug):
     order_queryset = Order.objects.filter(user=request.user, ordered=False)
     if order_queryset.exists():
         order = order_queryset[0]
-        # Check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item.quantity += 1
             order_item.save()
@@ -259,6 +254,7 @@ def remove_from_cart(request, slug):
             )[0]
             order.items.remove(order_item)
             order_item.delete()
+            order.delete()
             messages.info(request, "This item was removed from your cart")
             return redirect('core:order-summary')
         else:
@@ -288,7 +284,8 @@ def remove_single_item_from_cart(request, slug):
                 order_item.quantity -= 1
                 order_item.save()
             else:
-                order.items.remove(order_item)
+                order_item.delete()
+                order.delete()
             messages.info(request, "This item quantity has been changed")
             return redirect('core:order-summary')
         else:
@@ -306,7 +303,7 @@ def get_coupon(request, code):
         return coupon
     except ObjectDoesNotExist:
         messages.info(request, "This coupon does not exist")
-        return redirect("core:checkout")
+        return None
 
 
 class AddCouponView(View):
@@ -317,6 +314,12 @@ class AddCouponView(View):
             try:
                 code = form.cleaned_data.get('code')
                 order = Order.objects.get(user=self.request.user, ordered=False)
+                if order.coupon:
+                    messages.warning(self.request, 'You can not use one coupon two times')
+                    return redirect("core:checkout")
+                if get_coupon(self.request, code) is None:
+                    messages.warning(self.request, 'Coupon validation error')
+                    return redirect("core:checkout")
                 order.coupon = get_coupon(self.request, code)
                 order.save()
                 messages.success(self.request, "This coupon was successfully added to your order")
@@ -333,19 +336,19 @@ class RomanceView(View):
         context = {'items': romance}
         return render(self.request, 'home-page.html', context=context)
 
-class ClassicView(View):
+class EducationReferenceView(View):
 
     def get(self, *args, **kwargs):
 
-        classic = Item.objects.filter(category='B').all()
+        classic = Item.objects.filter(category='E').all()
         context = {'items': classic}
         return render(self.request, 'home-page.html', context=context)
 
-class HorrorView(View):
+class BusinessInvestingView(View):
 
     def get(self, *args, **kwargs):
 
-        horror = Item.objects.filter(category='E').all()
+        horror = Item.objects.filter(category='B').all()
         context = {'items': horror}
         return render(self.request, 'home-page.html', context=context)
 
