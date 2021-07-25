@@ -8,7 +8,7 @@ from django_countries.fields import CountryField
 
 CATEGORY_CHOICES = (
     ('R', 'Romance'),
-    ('C', 'Classics'),
+    ('C', 'Classic'),
     ('H', 'Horror')
 )
 

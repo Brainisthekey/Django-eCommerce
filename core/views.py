@@ -12,7 +12,6 @@ from core.forms import CheckkOutForm, CouponForm
 
 
 
-
 def is_valid_form(values):
     valid = True
     for field in values:
@@ -320,3 +319,29 @@ class AddCouponView(View):
             except ObjectDoesNotExist:
                 messages.info(self.request, "You do not have an active order")
                 return redirect("core:checkout")
+
+class RomanceView(View):
+
+    def get(self, *args, **kwargs):
+
+        romance = Item.objects.filter(category='R').all()
+        context = {'items': romance}
+        return render(self.request, 'home-page.html', context=context)
+
+class ClassicView(View):
+
+    def get(self, *args, **kwargs):
+
+        classic = Item.objects.filter(category='C').all()
+        context = {'items': classic}
+        return render(self.request, 'home-page.html', context=context)
+
+class HorrorView(View):
+
+    def get(self, *args, **kwargs):
+
+        horror = Item.objects.filter(category='H').all()
+        context = {'items': horror}
+        return render(self.request, 'home-page.html', context=context)
+
+

@@ -1,5 +1,5 @@
 from django.urls import path
-from core.views import CheckoutView, HomeView, ItemDetailView, add_to_cart, remove_from_cart, OrderSummaryView, remove_single_item_from_cart, PaymentView, AddCouponView
+from core.views import CheckoutView, HomeView, ItemDetailView, add_to_cart, remove_from_cart, OrderSummaryView, remove_single_item_from_cart, PaymentView, AddCouponView, RomanceView, ClassicView, HorrorView
 
 app_name = 'core'
 
@@ -13,4 +13,7 @@ urlpatterns = [
     path('add-coupon/', AddCouponView.as_view(), name='add-coupon'),
     path('remove-from-cart/<slug>/', remove_from_cart, name='remove-from-cart'),
     path('remove-item-from-cart/<slug>/', remove_single_item_from_cart, name='remove_single_item_from_cart'),
+    path('romance/', RomanceView.as_view(), name='romance'),
+    path('horror/', HorrorView.as_view(), name='horror'),
+    path('classic/', ClassicView.as_view(), name='classic'),
 ]
