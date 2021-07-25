@@ -8,8 +8,8 @@ from django_countries.fields import CountryField
 
 CATEGORY_CHOICES = (
     ('R', 'Romance'),
-    ('C', 'Classic'),
-    ('H', 'Horror')
+    ('B', 'Business & Investing'),
+    ('E', 'Education & Reference')
 )
 
 LABEL_CHOICES = (

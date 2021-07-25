@@ -187,7 +187,7 @@ class PaymentView(View):
 class HomeView(ListView):
     
     model = Item
-    paginate_by = 5
+    paginate_by = 8
     template_name = 'home-page.html'
     context_object_name = 'items'
 
@@ -337,7 +337,7 @@ class ClassicView(View):
 
     def get(self, *args, **kwargs):
 
-        classic = Item.objects.filter(category='C').all()
+        classic = Item.objects.filter(category='B').all()
         context = {'items': classic}
         return render(self.request, 'home-page.html', context=context)
 
@@ -345,7 +345,7 @@ class HorrorView(View):
 
     def get(self, *args, **kwargs):
 
-        horror = Item.objects.filter(category='H').all()
+        horror = Item.objects.filter(category='E').all()
         context = {'items': horror}
         return render(self.request, 'home-page.html', context=context)
 
