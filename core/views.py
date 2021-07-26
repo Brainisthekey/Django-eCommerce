@@ -9,8 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm, CouponForm
 from django.db.models import Q
-from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order_if_order_items_empty, check_item_order_quantity
-
+from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order_if_order_items_empty, check_item_order_quantity, get_coupon, add_and_save_coupon_to_the_order, check_user_for_active_coupon, filtering_items_by_caegories, filtering_items_by_icontains_filter
+from core.services.form_services import get_coupon_form_and_validate, get_code_from_from
 
 
 def is_valid_form(values):
@@ -311,34 +311,26 @@ def remove_single_item_from_cart(request, slug):
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
 
-
-def get_coupon(request, code):
-    try:
-        coupon = Coupon.objects.get(code=code)
-        return coupon
-    except ObjectDoesNotExist:
-        messages.info(request, "This coupon does not exist")
-        return None
-
-
 class AddCouponView(View):
 
     def post(self, *args, **kwargs):
         form = CouponForm(self.request.POST or None)
         if form.is_valid():
             try:
-                code = form.cleaned_data.get('code')
-                #order = Order.objects.get(user=self.request.user, ordered=False)
+                code = get_code_from_from(form)
                 order = get_order_objects(user=self.request.user, ordered=False)
-                if order.coupon:
+                if check_user_for_active_coupon(order=order):
                     messages.warning(self.request, 'You can not use one coupon two times')
                     return redirect("core:checkout")
-                if get_coupon(self.request, code) is None:
-                    messages.warning(self.request, 'Coupon validation error')
+                if get_coupon(self.request, code):
+                    add_and_save_coupon_to_the_order(
+                        order=order,
+                        request=self.request,
+                        code=code
+                    )
+                    messages.success(self.request, "This coupon was successfully added to your order")
                     return redirect("core:checkout")
-                order.coupon = get_coupon(self.request, code)
-                order.save()
-                messages.success(self.request, "This coupon was successfully added to your order")
+                messages.warning(self.request, 'Coupon validation error')
                 return redirect("core:checkout")
             except ObjectDoesNotExist:
                 messages.info(self.request, "You do not have an active order")
@@ -348,24 +340,24 @@ class RomanceView(View):
 
     def get(self, *args, **kwargs):
 
-        romance = Item.objects.filter(category='R').all()
-        context = {'items': romance}
+        romance_items = filtering_items_by_caegories(category='R')
+        context = {'items': romance_items}
         return render(self.request, 'home-page.html', context=context)
 
 class EducationReferenceView(View):
 
     def get(self, *args, **kwargs):
 
-        classic = Item.objects.filter(category='E').all()
-        context = {'items': classic}
+        education_reference_items = filtering_items_by_caegories(category='E')
+        context = {'items': education_reference_items}
         return render(self.request, 'home-page.html', context=context)
 
 class BusinessInvestingView(View):
 
     def get(self, *args, **kwargs):
 
-        horror = Item.objects.filter(category='B').all()
-        context = {'items': horror}
+        business_investing = filtering_items_by_caegories(category='B')
+        context = {'items': business_investing}
         return render(self.request, 'home-page.html', context=context)
 
 
@@ -377,5 +369,5 @@ class SearchResult(ListView):
 
     def get_queryset(self):
         query = self.request.GET.get('q')
-        items = Item.objects.filter(Q(title__icontains=query))
+        items = filtering_items_by_icontains_filter(query=query)
         return items
