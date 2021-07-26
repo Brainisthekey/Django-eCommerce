@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm, CouponForm
 from django.db.models import Q
-
+from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order_if_order_items_empty
 
 
 
@@ -22,30 +22,34 @@ def is_valid_form(values):
 
 class CheckoutView(LoginRequiredMixin, View):
     
+    #TODO: add verification if adress exist in database, get rid of the mistake of dublication
+
     def get(self, *args, **kwargs):
         try:
-            order_queryset = Order.objects.get(user=self.request.user, ordered=False)
-            form = CheckkOutForm()
+            #order_queryset = Order.objects.get(user=self.request.user, ordered=False)
+            order_queryset = get_order_objects(user=self.request.user, ordered=False)
+            #form = CheckkOutForm()
+        
             context = {
-                'form': form,
+                'form': CheckkOutForm(),
                 'couponform': CouponForm(),
                 'order': order_queryset
             }
 
-            shipping_address_qs = Adress.objects.filter(
+            shipping_address_queryset = Adress.objects.filter(
                 user=self.request.user,
                 adress_type='S',
                 default=True
             )
-            if shipping_address_qs.exists():
-                context.update({'default_shipping_address': shipping_address_qs[0]})
+            if shipping_address_queryset.exists():
+                context.update({'default_shipping_address': shipping_address_queryset[0]})
 
             billing_address_qs = Adress.objects.filter(
                 user=self.request.user,
                 adress_type='B',
                 default=True
             )
-            if shipping_address_qs.exists():
+            if billing_address_qs.exists():
                 context.update({'default_billing_address': billing_address_qs[0]})
 
             return render(self.request, "checkout-page.html", context=context)
@@ -56,7 +60,8 @@ class CheckoutView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         form = CheckkOutForm(self.request.POST or None)
         try:
-            order = Order.objects.get(user=self.request.user, ordered=False)
+            #order = Order.objects.get(user=self.request.user, ordered=False)
+            order = get_order_objects(user=self.request.user, ordered=False)
             if form.is_valid():
 
                 use_default_shipping = form.cleaned_data.get('use_default_shipping')
@@ -179,11 +184,6 @@ class CheckoutView(LoginRequiredMixin, View):
             return redirect("core:order-summary")
 
 
-class PaymentView(View):
-
-    def get(self, *args, **kwargs):
-        return render(self.request, 'payment.html')
-
 class HomeView(ListView):
     
     model = Item
@@ -195,7 +195,8 @@ class OrderSummaryView(LoginRequiredMixin, View):
 
     def get(self, *args, **kwargs):
         try:
-            order_items = Order.objects.get(user=self.request.user, ordered=False)
+            #order_items = Order.objects.get(user=self.request.user, ordered=False)
+            order_items = get_order_objects(user=self.request.user, ordered=False)
             context = {
                 'objects': order_items
             }
@@ -240,24 +241,30 @@ def add_to_cart(request, slug):
 
 @login_required
 def remove_from_cart(request, slug):
+    
+    filtered_order_objects = filter_order_objects(user=request.user, ordered=False)
 
-    item = get_object_or_404(Item, slug=slug)
-    order_queryset = Order.objects.filter(user=request.user, ordered=False)
-
-    if order_queryset.exists():
-        order = order_queryset[0]
-        # Check if the order item is in the order
-        if order.items.filter(item__slug=item.slug).exists():
-            order_item = OrderItem.objects.filter(
-                item=item,
+    if filtered_order_objects:
+        filtered_order_items_by_slag = filter_order_item_objects_by_slag(
+            user=request.user,
+            slug=slug,
+            order_quaryset=filtered_order_objects,
+            ordered=False
+        )
+        if filtered_order_items_by_slag:
+            remove_item_from_orders(
                 user=request.user,
+                slug=slug,
                 ordered=False
-            )[0]
-            order.items.remove(order_item)
-            order_item.delete()
-            all_orders = OrderItem.objects.all()
+            )
+            delete_item_from_order_items(
+                user=request.user,
+                slug=slug,
+                ordered=False
+            )
+            all_orders = get_all_objects_from_order_items()
             if all_orders.count() == 0:
-                order.delete()
+                delete_order_if_order_items_empty(user=request.user, ordered=False)
                 messages.info(request, 'You successfully delete all items from your cart')
                 return redirect('core:home')
             messages.info(request, "This item was removed from your cart")
@@ -266,7 +273,6 @@ def remove_from_cart(request, slug):
             messages.info(request, "This item was not in your cart")
             return redirect('core:order-summary', slug=slug)
     else:
-        # add a message saying the user doesn't have an order
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
 
@@ -322,7 +328,8 @@ class AddCouponView(View):
         if form.is_valid():
             try:
                 code = form.cleaned_data.get('code')
-                order = Order.objects.get(user=self.request.user, ordered=False)
+                #order = Order.objects.get(user=self.request.user, ordered=False)
+                order = get_order_objects(user=self.request.user, ordered=False)
                 if order.coupon:
                     messages.warning(self.request, 'You can not use one coupon two times')
                     return redirect("core:checkout")
