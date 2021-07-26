@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm, CouponForm
 from django.db.models import Q
-from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order_if_order_items_empty
+from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order_if_order_items_empty, check_item_order_quantity
 
 
 
@@ -280,28 +280,28 @@ def remove_from_cart(request, slug):
 @login_required
 def remove_single_item_from_cart(request, slug):
 
-    item = get_object_or_404(Item, slug=slug)
-    order_queryset = Order.objects.filter(user=request.user, ordered=False)
-    if order_queryset.exists():
-        order = order_queryset[0]
-        # Check if the order item is in the order
-        if order.items.filter(item__slug=item.slug).exists():
-            order_item = OrderItem.objects.filter(
-                item=item,
+    filtered_order_objects = filter_order_objects(user=request.user, ordered=False)
+
+    if filtered_order_objects:
+
+        filtered_order_items_by_slag = filter_order_item_objects_by_slag(
+            user=request.user,
+            slug=slug,
+            order_quaryset=filtered_order_objects,
+            ordered=False
+        )
+        if filtered_order_items_by_slag:
+            order_item = filter_order_item_objects(
                 user=request.user,
+                slug=slug,
                 ordered=False
-            )[0]
-            if order_item.quantity > 1:
-                order_item.quantity -= 1
-                order_item.save()
-            else:
-                order_item.delete()
-                all_orders = OrderItem.objects.all()
-                if all_orders.count() == 0:
-                    order.delete()
-                    messages.info(request, 'You successfully delete all items from your cart')
-                    return redirect('core:home')
-                #order.delete()
+            )
+            check_item_order_quantity(item=order_item)
+            all_orders = get_all_objects_from_order_items()
+            if all_orders.count() == 0:
+                delete_order_if_order_items_empty(user=request.user, ordered=False)
+                messages.info(request, 'You successfully delete all items from your cart')
+                return redirect('core:home')
             messages.info(request, "This item quantity has been changed")
             return redirect('core:order-summary')
         else:
