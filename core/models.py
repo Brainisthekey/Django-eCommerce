@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 from django.db.models.fields import CharField, IntegerField, TextField
-from django.db.models.fields.related import ManyToManyField
 from django.urls import reverse
 from django_countries.fields import CountryField
 
@@ -84,7 +83,6 @@ class Order(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     ordered_date = models.DateTimeField()
     ordered = models.BooleanField(default=False)
-    #Attention for this
     billing_adress = models.ForeignKey('Adress', on_delete=models.SET_NULL, null=True, blank=True, related_name='billing_adress')
     shipping_adress = models.ForeignKey('Adress', on_delete=models.SET_NULL, null=True, blank=True, related_name='shipping_adress')
     coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True)
@@ -97,7 +95,6 @@ class Order(models.Model):
             total -= self.coupon.amount
         return total
 
-
     def __str__(self):
         return self.user.username
         
@@ -109,10 +106,8 @@ class OrderDevilevered(models.Model):
     quantity = IntegerField(default=1)
 
 
-
 class Adress(models.Model):
 
-    #This ForeginKey just connect this field with the auth user
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     street_adress = models.CharField(max_length=100)
     apartment_adress = models.CharField(max_length=100)

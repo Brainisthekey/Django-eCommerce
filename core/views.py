@@ -243,6 +243,7 @@ def remove_from_cart(request, slug):
 
     item = get_object_or_404(Item, slug=slug)
     order_queryset = Order.objects.filter(user=request.user, ordered=False)
+
     if order_queryset.exists():
         order = order_queryset[0]
         # Check if the order item is in the order
@@ -254,7 +255,11 @@ def remove_from_cart(request, slug):
             )[0]
             order.items.remove(order_item)
             order_item.delete()
-            order.delete()
+            all_orders = OrderItem.objects.all()
+            if all_orders.count() == 0:
+                order.delete()
+                messages.info(request, 'You successfully delete all items from your cart')
+                return redirect('core:home')
             messages.info(request, "This item was removed from your cart")
             return redirect('core:order-summary')
         else:
@@ -285,14 +290,18 @@ def remove_single_item_from_cart(request, slug):
                 order_item.save()
             else:
                 order_item.delete()
-                order.delete()
+                all_orders = OrderItem.objects.all()
+                if all_orders.count() == 0:
+                    order.delete()
+                    messages.info(request, 'You successfully delete all items from your cart')
+                    return redirect('core:home')
+                #order.delete()
             messages.info(request, "This item quantity has been changed")
             return redirect('core:order-summary')
         else:
             messages.info(request, "This item was not in your cart")
             return redirect('core:product', slug=slug)
     else:
-        # add a message saying the user doesn't have an order
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
 
