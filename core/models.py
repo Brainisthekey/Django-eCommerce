@@ -102,7 +102,7 @@ class Order(models.Model):
 class OrderDevilevered(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    item_title = TextField(max_length=1000)
+    summary_items = TextField(max_length=1000)
     quantity = IntegerField(default=1)
 
 

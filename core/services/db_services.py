@@ -1,7 +1,6 @@
 from django.db.models.query_utils import Q
-from core.models import Order
+from core.models import Adress, Order, Item, OrderDevilevered, OrderItem, Coupon
 from django.shortcuts import get_object_or_404
-from core.models import Item, OrderItem, Coupon
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 
@@ -15,6 +14,7 @@ def filtering_items_by_icontains_filter(query):
     return Item.objects.filter(Q(title__icontains=query))
 
 # Operation with model Order
+
 
 def get_order_objects(user, ordered):
     """Get objects from Order model"""
@@ -30,16 +30,23 @@ def filter_order_objects(user, ordered):
         return Order.objects.filter(user=user, ordered=False).first()
     return None
 
+def add_shipping_adress_to_the_order(order, adress_queryset):
+    """Add shipping address to the order"""
+    order.shipping_adress = adress_queryset
+    save_order_changes(order)
+
+def add_billing_address_to_the_order(order, adress_queryset):
+    """Add billing address to the order"""
+    order.billing_adress = adress_queryset
+    save_order_changes(order)
+
+
 def remove_item_from_orders(user, slug, ordered):
     """Remove definite item from Order model"""
     filter_order_objects(user=user, ordered=False).items.remove(filter_order_item_objects(user=user, slug=slug, ordered=False))
 
-def delete_order_if_order_items_empty(user, ordered):
+def delete_order(user, ordered):
     """Delete Order if order items is empty"""
-    filter_order_objects(user=user, ordered=False).delete()
-
-def delete_order_if_order_items_empty(user, ordered):
-    """Delete order in Order model if OrderItems is empty"""
     filter_order_objects(user=user, ordered=False).delete()
 
 # Operation with model OrderItems
@@ -47,6 +54,10 @@ def delete_order_if_order_items_empty(user, ordered):
 def get_all_objects_from_order_items():
     """Get all objects from OrderItem model"""
     return OrderItem.objects.all()
+
+def delete_all_items_from_order(orders):
+    """Delete all items from OrderItem model"""
+    orders.delete()
 
 def filter_order_item_objects(user, slug, ordered):
     """Filtering objects in OrderItem model"""
@@ -59,7 +70,6 @@ def filter_order_item_objects(user, slug, ordered):
 
 def filter_order_item_objects_by_slag(user, slug, order_quaryset, ordered):
     """Filtering objects in OrderItem model by slag"""
-    #Maybe will have an error
     item = get_object_or_404(klass=Item, slug=slug)
     if order_quaryset.items.filter(item__slug=item.slug).exists():
         return order_quaryset.items.filter(item__slug=item.slug)
@@ -77,6 +87,14 @@ def check_item_order_quantity(item):
     else:
         item.delete()
 
+def get_order_quantity(order):
+    """Get order quantity"""
+    return order.quantity
+
+def get_order_item_title(order):
+    """Get order itemm title"""
+    return order.item.title
+
 # Operation with model Coupon
    
 def get_coupon(request, code):
@@ -93,7 +111,6 @@ def check_user_for_active_coupon(order):
         return order.coupon
     return None
 
-
 def add_and_save_coupon_to_the_order(order, request, code):
     """Add coupon to the order"""
     order.coupon = get_coupon(request=request, code=code)
@@ -105,4 +122,66 @@ def check_user_for_active_coupon(order):
         return order.coupon
     return None
 
-# Other
+# Operation with model Address
+
+def filter_and_check_default_adress(user, adress_type, default):
+    """Check and filter Address model for default billing and shipping address"""
+    adress = Adress.objects.filter(
+        user=user,
+        adress_type=adress_type,
+        default=True
+    )
+    if adress.exists():
+        return adress.first()
+    return None
+
+def check_adress_by_street_adress(user, street_adress):
+    """Chek adress in Adress model by street adress"""
+    adress = Adress.objects.filter(
+        user=user,
+        street_adress=street_adress,
+        adress_type='B',
+    )
+    if adress.exists():
+        return adress.first()
+    return None
+
+def create_a_new_address(user, street_adress, apartment_adress, country, zip, adress_type):
+    """Create a new addresss"""
+    adress = Adress(
+        user=user,
+        street_adress=street_adress,
+        apartment_adress=apartment_adress,
+        country=country,
+        zip=zip,
+        adress_type=adress_type
+    )
+    adress.save()
+    return adress
+
+
+
+def change_status_default_address(address, status):
+    """Change status of default adress if exists"""
+    address.default = status
+    address.save()
+
+
+def change_pk_of_address(address):
+    """Change pk of address"""
+    address.pk = None
+    address.save()
+
+def change_address_type_for_billing(address):
+    address.adress_type = 'B'
+    address.save()
+
+# Operation with OrderDelivered model
+
+def create_a_new_devilered_order_object(user, summary_items, quantity):
+    """Create a new devilered order objects"""
+    OrderDevilevered.objects.create(
+        user=user,
+        summary_items=summary_items,
+        quantity=quantity
+    )

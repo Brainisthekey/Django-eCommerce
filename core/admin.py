@@ -25,7 +25,7 @@ class AdressAdmin(admin.ModelAdmin):
 class OrderDevileredAdmin(admin.ModelAdmin):
 
     #Want to add shipping and billing adress
-    list_display = ['user', 'item_title', 'quantity']
+    list_display = ['user', 'summary_items', 'quantity']
 
 
 admin.site.register(Item)

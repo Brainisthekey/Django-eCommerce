@@ -11,3 +11,11 @@ def get_coupon_form_and_validate(request, form):
 def get_code_from_from(form):
     """Get code from form"""
     return form.cleaned_data.get('code')
+
+
+def validate_from_for_whitespaces(values):
+    valid = True
+    for field in values:
+        if field == '':
+            valid = False
+    return valid
