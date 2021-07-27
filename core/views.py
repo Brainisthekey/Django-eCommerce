@@ -11,7 +11,7 @@ from core.forms import CheckkOutForm, CouponForm
 from django.db.models import Q
 from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order, check_item_order_quantity, get_coupon, add_and_save_coupon_to_the_order, check_user_for_active_coupon, filtering_items_by_caegories, filtering_items_by_icontains_filter, filter_and_check_default_adress, add_shipping_adress_to_the_order, create_a_new_address, change_status_default_address, change_pk_of_address, change_address_type_for_billing, add_billing_address_to_the_order, create_a_new_devilered_order_object, delete_all_items_from_order, check_adress_by_street_adress
 from core.services.form_services import get_coupon_form_and_validate, get_code_from_from, validate_from_for_whitespaces
-from core.services.business_logic import get_information_about_order, convert_order_items_into_string_view
+from core.services.business_logic import get_information_about_order, convert_order_items_into_string_view, default_shipping_adress
 
 
 class HomeView(ListView):
@@ -154,6 +154,7 @@ class CheckoutView(LoginRequiredMixin, View):
             set_default_billing = form.cleaned_data.get('set_default_billing')
             use_default_billing = form.cleaned_data.get('use_default_billing')
 
+            #Под вопросом остаються пока вот эти кверисеты, я бы их убрал нахер
             address_shipping_queryset = filter_and_check_default_adress(
                 user=self.request.user,
                 adress_type='S',
@@ -164,33 +165,21 @@ class CheckoutView(LoginRequiredMixin, View):
                 adress_type='B',
                 default=True
             )
-            #Написать под каждое действие функцию в отдельном файле, так как это бизнесс логика
-            if use_default_shipping:
-                if address_shipping_queryset:
-                    add_shipping_adress_to_the_order(order=order, adress_queryset=address_shipping_queryset)
-                else:
-                    messages.info(self.request, "No default shipping adress available")
-                    return redirect('core:checkout')
-            else:
-                if validate_from_for_whitespaces([shipping_address1, shipping_country, shipping_zip]):
-                    shipping_adress = create_a_new_address(
-                        user=self.request.user,
-                        street_adress=shipping_address1,
-                        apartment_adress=shipping_address2,
-                        country=shipping_country,
-                        zip=shipping_zip,
-                        adress_type='S'
-                    )
-                    add_shipping_adress_to_the_order(order=order, adress_queryset=shipping_adress)
-                    #Check if user wants to add this adress to default
-                    if set_default_shipping:
-                        #Chose a new statuc for crerated shipping adress
-                        change_status_default_address(address=shipping_adress, status=True)
-                else:
-                #Пользователь вводит новый адресс
-                    messages.info(self.request, 'Please fill in the required shipping address fields')
-                    return redirect('core:checkout')
-
+            shipping_adress_or_error = default_shipping_adress(
+                user=self.request.user,
+                order=order,
+                use_default_shipping=use_default_shipping,
+                address_shipping_queryset=address_shipping_queryset,
+                set_default_shipping=set_default_shipping,
+                shipping_address1=shipping_address1,
+                shipping_address2=shipping_address2,
+                shipping_country=shipping_country,
+                shipping_zip=shipping_zip
+            )
+            if shipping_adress_or_error == 'Please fill in the required shipping address fields':
+                messages.info(self.request, 'Please fill in the required shipping address fields')
+                return redirect('core:checkout')
+            
             if same_billing_address and use_default_billing:
                 messages.info(self.request, 'You can not use 2 options at the same time <It is brake the logic>')
                 return redirect('core:checkout')
@@ -376,9 +365,8 @@ def remove_single_item_from_cart(request, slug):
                 return redirect('core:home')
             messages.info(request, "This item quantity has been changed")
             return redirect('core:order-summary')
-        else:
-            messages.info(request, "This item was not in your cart")
-            return redirect('core:product', slug=slug)
+        messages.info(request, "This item was not in your cart")
+        return redirect('core:product', slug=slug)
     else:
         messages.info(request, "You do not have an active order yet")
         return redirect('core:product', slug=slug)
