@@ -3,13 +3,13 @@ from core.models import Item, OrderItem, Order, Coupon, Adress, OrderDevilevered
 
 
 class OrderAdmin(admin.ModelAdmin):
-
+    """Modify dispayed view of Orders"""
     list_display = ['user', 'ordered', 'billing_adress', 'shipping_adress', 'coupon']
     list_display_links = ['user', 'billing_adress', 'shipping_adress', 'coupon']
     search_fields = ['user__username']
 
 class AdressAdmin(admin.ModelAdmin):
-
+    """Modify displayed view of Address"""
     list_display = [
         'user',
         'street_adress',
@@ -23,8 +23,8 @@ class AdressAdmin(admin.ModelAdmin):
     search_fields = ['user', 'street_adress', 'apartment_adress', 'zip']
 
 class OrderDevileredAdmin(admin.ModelAdmin):
-
-    #Want to add shipping and billing adress
+    """Modify displayed DevileredOrder"""
+    # TODO: add shipping and billing adress to devilered order
     list_display = ['user', 'summary_items', 'quantity']
 
 

@@ -352,9 +352,7 @@ def the_same_billing_logic(
             )
 
 
-#Logic if options are disabled:
-# (Billing address is the same as my shipping address)
-# (Save as default billing address)
+#Logic if options are disabled:1.(Billing address is the same as my shipping address) and (Save as default billing address)
 
 def disabled_billing_and_default_logic(
     user,

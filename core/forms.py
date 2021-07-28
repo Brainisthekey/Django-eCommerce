@@ -8,7 +8,7 @@ PAYMENT_CHOICES = (
 )
 
 class CheckkOutForm(forms.Form):
-    
+    """Checkout form"""
     shipping_address = forms.CharField(required=False)
     shipping_address2 = forms.CharField(required=False)
     shipping_country = CountryField(blank_label='(select country)').formfield(
@@ -39,7 +39,7 @@ class CheckkOutForm(forms.Form):
 
 
 class CouponForm(forms.Form):
-
+    """Coupon form"""
     code = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
         'placeholder': 'Promo code',
