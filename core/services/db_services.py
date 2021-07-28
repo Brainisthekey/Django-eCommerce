@@ -9,13 +9,15 @@ from django.contrib import messages
 # Operation with model Item
 
 def filtering_items_by_caegories(category):
+    """Filtering model Item by category"""
     return Item.objects.filter(category=category).all()
 
 def filtering_items_by_icontains_filter(query):
+    """Filtering model Item by Q(iconaiins)"""
     return Item.objects.filter(Q(title__icontains=query))
 
-# Operation with model Order
 
+# Operation with model Order
 
 def get_order_objects(user, ordered):
     """Get objects from Order model"""
@@ -47,6 +49,7 @@ def add_billing_address_to_the_order(order, adress_queryset):
     save_order_changes(order)
 
 def add_item_to_the_order(order, order_item):
+    """Add order item to the order"""
     order.items.add(order_item)
 
 def remove_item_from_orders(user, slug, ordered):
@@ -69,6 +72,7 @@ def delete_all_items_from_order(orders):
     orders.delete()
 
 def get_order_item_or_create(user, slug):
+    """Get or create order item object"""
     item = get_object_or_404(klass=Item, slug=slug)
     return OrderItem.objects.get_or_create(
         user=user,
@@ -121,6 +125,7 @@ def get_order_item_title(order):
 # Operation with model Coupon
    
 def get_coupon(request, code):
+    """Get coupon object if exists"""
     try:
         coupon = Coupon.objects.get(code=code)
         return coupon
@@ -196,6 +201,7 @@ def change_pk_of_address(address):
     address.save()
 
 def change_address_type_for_billing(address):
+    """Change address type for billing"""
     address.adress_type = 'B'
     address.save()
 

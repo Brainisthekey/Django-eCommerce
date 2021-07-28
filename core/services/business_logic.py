@@ -1,9 +1,12 @@
 from core.services.db_services import create_a_new_address, add_billing_address_to_the_order, change_status_default_address, add_shipping_adress_to_the_order, get_all_objects_from_order_items, check_adress_by_street_adress, filter_and_check_default_adress, create_a_new_devilered_order_object, delete_all_items_from_order, delete_order
 from core.services.form_services import validate_from_for_whitespaces
 
-
+#General logic
 def get_information_about_order(orders):
-    """Get infomation about order"""
+    """
+    Get infomation about order
+    Get title and quantity of order
+    """
     ordered_items = []
     ordered_quantity = 0
     for order in orders:
@@ -12,7 +15,7 @@ def get_information_about_order(orders):
     return ordered_quantity, ordered_items
 
 def convert_order_items_into_string_view(orders):
-    """Convert orders into string view"""
+    """Convert orders into string representation"""
     string_filed = ''
     _, ordered_items = get_information_about_order(orders=orders)
     for i, item in enumerate(ordered_items, 1):
@@ -20,12 +23,9 @@ def convert_order_items_into_string_view(orders):
         string_filed += fstring
     return fstring.rstrip()
 
+
 #Buiseness logic checkout view
 
-
-
-
-#The logic for shiipping adress fileds and default shipping adress
 def check_option_set_default(set_default_shipping, shipping_adress, user, adress_type):
     """Save adress to default shipping adress"""
     address_queryset = filter_and_check_default_adress(
@@ -123,7 +123,10 @@ def check_enabled_option_use_default_shipping(use_default_shipping, address_ship
 
 
 def check_default_shipping_adress(order, address_shipping_queryset):
-    """Check default shipping adress and if exist add to the order"""
+    """
+    Check default shipping adress and if exist
+    Call another function to add shipping adress to the order
+    """
     if address_shipping_queryset:
         #Chagne the logic of returns
         add_shipping_adress_to_the_order(order=order, adress_queryset=address_shipping_queryset)
