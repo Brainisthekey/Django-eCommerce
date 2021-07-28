@@ -135,12 +135,12 @@ def filter_and_check_default_adress(user, adress_type, default):
         return adress.first()
     return None
 
-def check_adress_by_street_adress(user, street_adress):
+def check_adress_by_street_adress(user, street_adress, adress_type):
     """Chek adress in Adress model by street adress"""
     adress = Adress.objects.filter(
         user=user,
         street_adress=street_adress,
-        adress_type='B',
+        adress_type=adress_type,
     )
     if adress.exists():
         return adress.first()

@@ -1,8 +1,9 @@
 
 
-a = [1, 2, 3]
+a = None
+b = None
+if not a or b:
+    print('Hello')
 
-def func(*args):
-    print(*args)
-
-func(a)
+if not all((a, b)):
+    print('hello')

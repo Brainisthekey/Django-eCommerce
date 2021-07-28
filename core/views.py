@@ -1,3 +1,4 @@
+from django.http import request
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
@@ -11,7 +12,7 @@ from core.forms import CheckkOutForm, CouponForm
 from django.db.models import Q
 from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order, check_item_order_quantity, get_coupon, add_and_save_coupon_to_the_order, check_user_for_active_coupon, filtering_items_by_caegories, filtering_items_by_icontains_filter, filter_and_check_default_adress, add_shipping_adress_to_the_order, create_a_new_address, change_status_default_address, change_pk_of_address, change_address_type_for_billing, add_billing_address_to_the_order, create_a_new_devilered_order_object, delete_all_items_from_order, check_adress_by_street_adress
 from core.services.form_services import get_coupon_form_and_validate, get_code_from_from, validate_from_for_whitespaces
-from core.services.business_logic import get_information_about_order, convert_order_items_into_string_view, default_shipping_adress
+from core.services.business_logic import get_information_about_order, convert_order_items_into_string_view, default_shipping_adress, the_same_billing_logic, disabled_billing_and_default_logic, create_delivered_object_item, delete_order_and_order_items
 
 
 class HomeView(ListView):
@@ -154,124 +155,57 @@ class CheckoutView(LoginRequiredMixin, View):
             set_default_billing = form.cleaned_data.get('set_default_billing')
             use_default_billing = form.cleaned_data.get('use_default_billing')
 
-            #Под вопросом остаються пока вот эти кверисеты, я бы их убрал нахер
-            address_shipping_queryset = filter_and_check_default_adress(
-                user=self.request.user,
-                adress_type='S',
-                default=True
-            )
-            address_billing_queryset = filter_and_check_default_adress(
-                user=self.request.user,
-                adress_type='B',
-                default=True
-            )
+            if same_billing_address and use_default_billing:
+                messages.info(self.request, 'You can not use 2 options at the same time <It is brake the logic>')
+                return redirect('core:checkout')
+
             shipping_adress_or_error = default_shipping_adress(
                 user=self.request.user,
                 order=order,
                 use_default_shipping=use_default_shipping,
-                address_shipping_queryset=address_shipping_queryset,
                 set_default_shipping=set_default_shipping,
                 shipping_address1=shipping_address1,
                 shipping_address2=shipping_address2,
                 shipping_country=shipping_country,
-                shipping_zip=shipping_zip
+                shipping_zip=shipping_zip,
+                adress_type='S'
             )
-            if shipping_adress_or_error == 'Please fill in the required shipping address fields':
-                messages.info(self.request, 'Please fill in the required shipping address fields')
+
+            the_same_billing_logic(
+                user=self.request.user,
+                order=order,
+                same_billing_address=same_billing_address,
+                use_default_shipping=use_default_shipping,
+                billing_adress1=billing_address1,
+                shipping_address1=shipping_address1,
+                shipping_address2=shipping_address2,
+                shipping_country=shipping_country,
+                shipping_zip=shipping_zip,
+                set_default_billing=set_default_billing,
+            )
+
+            billing_adress_or_error = disabled_billing_and_default_logic(
+                user=self.request.user,
+                order=order,
+                same_billing_address=same_billing_address,
+                use_default_billing=use_default_billing,
+                set_default_billing=set_default_billing,
+                billing_address1=billing_address1,
+                billing_address2=billing_address2,
+                billing_country=billing_country,
+                billing_zip=billing_zip,
+                adress_type="B"
+            )
+            
+            if billing_adress_or_error or shipping_adress_or_error == 'Please fill in all required fields':
+                messages.info(self.request, 'Please fill in all required fields')
                 return redirect('core:checkout')
             
-            if same_billing_address and use_default_billing:
-                messages.info(self.request, 'You can not use 2 options at the same time <It is brake the logic>')
-                return redirect('core:checkout')
-            if same_billing_address:
-                #Logic when shipping the same as a billing and we have default shipping
-                if use_default_shipping:
-                    add_billing_address_to_the_order(order=order, adress_queryset=address_shipping_queryset)
-                    if set_default_billing:
-                        if address_billing_queryset:
-                            if address_shipping_queryset.street_adress != address_billing_queryset.street_adress:
-                                change_status_default_address(address=address_billing_queryset, status=False)
-                                filtered_billing_adress = check_adress_by_street_adress(user=self.request.user, street_adress=address_shipping_queryset.street_adress)
-                                if not filtered_billing_adress:
-                                    billing_adress = create_a_new_address(
-                                        user=self.request.user,
-                                        street_adress=address_shipping_queryset.street_adress,
-                                        apartment_adress=address_shipping_queryset.apartment_adress,
-                                        country=address_shipping_queryset.country,
-                                        zip=address_shipping_queryset.zip,
-                                        adress_type='B',
-                                    )
-                                    change_status_default_address(address=billing_adress, status=True)
-                                else:
-                                    change_status_default_address(address=filtered_billing_adress, status=True)
-                            else:
-                                #Не делаем нихуя, она равны
-                                messages.info(self.request, 'Do nothing if the same')
-                        else:
-                            filtered_billing_adress = check_adress_by_street_adress(user=self.request.user, street_adress=address_shipping_queryset.street_adress)
-                            if not filtered_billing_adress:
-                                billing_adress = create_a_new_address(
-                                    user=self.request.user,
-                                    street_adress=address_shipping_queryset.street_adress,
-                                    apartment_adress=address_shipping_queryset.apartment_adress,
-                                    country=address_shipping_queryset.country,
-                                    zip=address_shipping_queryset.zip,
-                                    adress_type='B',
-                                )
-                                change_status_default_address(address=billing_adress, status=True)
-                            else:
-                                change_status_default_address(address=filtered_billing_adress, status=True)
-                    else:
-                        messages.info(self.request, 'Pizdec')
-                else:        
-                    messages.info(self.request, 'Govmo')
-                    add_billing_address_to_the_order(order=order, adress_queryset=shipping_adress)
-
-            if use_default_billing:
-                if address_billing_queryset:
-                    add_billing_address_to_the_order(order=order, adress_queryset=address_billing_queryset)
-                else:
-                    messages.info(self.request, "No default shipping adress available")
-                    return redirect('core:checkout')
-
-            if not same_billing_address or use_default_billing:
-                if validate_from_for_whitespaces([billing_address1, billing_country, billing_zip]):
-                    billing_adress = create_a_new_address(
-                        user=self.request.user,
-                        street_adress=billing_address1,
-                        apartment_adress=billing_address2,
-                        country=billing_country,
-                        zip=billing_zip,
-                        adress_type='B'
-                    )
-                    add_billing_address_to_the_order(order=order, adress_queryset=billing_adress)
-                    #Check if user wants to add thia adress to default
-                    if set_default_billing:
-                        #Создать функцию создания, так как будет переиспользловна
-                        address_queryset = filter_and_check_default_adress(
-                            user=self.request.user,
-                            adress_type='B',
-                            default=True
-                        )
-                        if address_queryset:
-                            change_status_default_address(address_queryset, status=False)
-                        change_status_default_address(address=billing_adress, status=True)
-                else:
-                    messages.info(self.request, 'Please fill in the required billing address fields')
-                    return redirect('core:checkout')
-
-            orders = get_all_objects_from_order_items()
-            quantity, _ = get_information_about_order(orders=orders)
-            summary_items_string = convert_order_items_into_string_view(orders=orders)
-            create_a_new_devilered_order_object(
-                user=self.request.user,
-                summary_items=summary_items_string,
-                quantity=quantity
-            )
-            delete_all_items_from_order(orders=orders)
-            delete_order(user=self.request.user, ordered=False)
-            messages.info(self.request, 'The order has been send')
-            return redirect('core:home')
+            create_delivered_object_item(user=self.request.user)
+            deleting_operation = delete_order_and_order_items(user=self.request.user)
+            if deleting_operation == 'The order has been send':
+                messages.info(self.request, 'The order has been send')
+                return redirect('core:home')
         messages.warning(self.request, "Failed Checkout")
         return redirect('core:checkout')
         
@@ -335,9 +269,8 @@ def remove_from_cart(request, slug):
             return redirect('core:order-summary')
         messages.info(request, "This item was not in your cart")
         return redirect('core:order-summary', slug=slug)
-    else:
-        messages.info(request, "You do not have an active order yet")
-        return redirect('core:product', slug=slug)
+    messages.info(request, "You do not have an active order yet")
+    return redirect('core:product', slug=slug)
 
 
 @login_required
@@ -367,6 +300,5 @@ def remove_single_item_from_cart(request, slug):
             return redirect('core:order-summary')
         messages.info(request, "This item was not in your cart")
         return redirect('core:product', slug=slug)
-    else:
-        messages.info(request, "You do not have an active order yet")
-        return redirect('core:product', slug=slug)
+    messages.info(request, "You do not have an active order yet")
+    return redirect('core:product', slug=slug)
