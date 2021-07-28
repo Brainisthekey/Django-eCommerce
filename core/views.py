@@ -1,18 +1,14 @@
-from django.http import request
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.detail import DetailView
-from core.models import Item, OrderItem, Order, Adress, Coupon, OrderDevilevered
+from core.models import Item
 from django.views.generic import ListView, View
-from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm, CouponForm
-from django.db.models import Q
-from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order, check_item_order_quantity, get_coupon, add_and_save_coupon_to_the_order, check_user_for_active_coupon, filtering_items_by_caegories, filtering_items_by_icontains_filter, filter_and_check_default_adress, add_shipping_adress_to_the_order, create_a_new_address, change_status_default_address, change_pk_of_address, change_address_type_for_billing, add_billing_address_to_the_order, create_a_new_devilered_order_object, delete_all_items_from_order, check_adress_by_street_adress
-from core.services.form_services import get_coupon_form_and_validate, get_code_from_from, validate_from_for_whitespaces
-from core.services.business_logic import get_information_about_order, convert_order_items_into_string_view, default_shipping_adress, the_same_billing_logic, disabled_billing_and_default_logic, create_delivered_object_item, delete_order_and_order_items
+from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order, check_item_order_quantity, get_coupon, add_and_save_coupon_to_the_order, check_user_for_active_coupon, filtering_items_by_caegories, filtering_items_by_icontains_filter, filter_and_check_default_adress, add_shipping_adress_to_the_order, create_a_new_address, change_status_default_address, change_pk_of_address, change_address_type_for_billing, add_billing_address_to_the_order, create_a_new_devilered_order_object, delete_all_items_from_order, check_adress_by_street_adress, get_order_item_or_create, add_item_to_the_order, create_order_object, change_order_quantity
+from core.services.business_logic import default_shipping_adress, the_same_billing_logic, disabled_billing_and_default_logic, create_delivered_object_item, delete_order_and_order_items
 
 
 class HomeView(ListView):
@@ -45,25 +41,23 @@ class AddCouponView(View):
     def post(self, *args, **kwargs):
         form = CouponForm(self.request.POST or None)
         if form.is_valid():
-            try:
-                code = get_code_from_from(form)
-                order = get_order_objects(user=self.request.user, ordered=False)
-                if check_user_for_active_coupon(order=order):
-                    messages.warning(self.request, 'You can not use one coupon two times')
-                    return redirect("core:checkout")
-                if get_coupon(self.request, code):
-                    add_and_save_coupon_to_the_order(
-                        order=order,
-                        request=self.request,
-                        code=code
-                    )
-                    messages.success(self.request, "This coupon was successfully added to your order")
-                    return redirect("core:checkout")
-                messages.warning(self.request, 'Coupon validation error')
+            code = form.cleaned_data.get('code')
+            order = get_order_objects(user=self.request.user, ordered=False)
+            if check_user_for_active_coupon(order=order):
+                messages.warning(self.request, 'You can not use one coupon two times')
                 return redirect("core:checkout")
-            except ObjectDoesNotExist:
-                messages.info(self.request, "You do not have an active order")
+            if get_coupon(self.request, code):
+                add_and_save_coupon_to_the_order(
+                    order=order,
+                    request=self.request,
+                    code=code
+                )
+                messages.success(self.request, "This coupon was successfully added to your order")
                 return redirect("core:checkout")
+            messages.warning(self.request, 'Coupon validation error')
+            return redirect("core:checkout")
+        messages.info(self.request, "You do not have an active order")
+        return redirect("core:checkout")
 
 class RomanceView(View):
 
@@ -104,8 +98,6 @@ class SearchResult(ListView):
 
 class CheckoutView(LoginRequiredMixin, View):
     
-    #TODO: add verification if adress exist in database, get rid of the mistake of dublication
-
     def get(self, *args, **kwargs):
         try:
             order_queryset = get_order_objects(user=self.request.user, ordered=False)
@@ -212,30 +204,29 @@ class CheckoutView(LoginRequiredMixin, View):
 @login_required
 def add_to_cart(request, slug):
     
-    item = get_object_or_404(Item, slug=slug)
-    order_item, _ = OrderItem.objects.get_or_create(
-        item=item,
-        user=request.user,
-        ordered=False
-    )
-    order_queryset = Order.objects.filter(user=request.user, ordered=False)
-    if order_queryset.exists():
-        order = order_queryset[0]
-        if order.items.filter(item__slug=item.slug).exists():
-            order_item.quantity += 1
-            order_item.save()
+    order_item = get_order_item_or_create(user=request.user, slug=slug)
+    order = filter_order_objects(user=request.user, ordered=False)
+    if order:
+        if filter_order_item_objects_by_slag(
+            user=request.user,
+            slug=slug,
+            order_quaryset=order,
+            ordered=False
+        ):
+            change_order_quantity(order_item=order_item)
             messages.info(request, "This item quantity was updated")
             return redirect('core:order-summary')
-        else:
-            order.items.add(order_item)
-            messages.info(request, "This item was aded tou your cart")
-            return redirect('core:order-summary')
-    else:
-        ordered_date = timezone.now()
-        order = Order.objects.create(user=request.user, ordered_date=ordered_date)
-        order.items.add(order_item)
+        add_item_to_the_order(order=order, order_item=order_item)
         messages.info(request, "This item was aded tou your cart")
         return redirect('core:order-summary')
+    order = create_order_object(
+        user=request.user,
+        order=order,
+        order_item=order_item
+    )
+    add_item_to_the_order(order=order, order_item=order_item)
+    messages.info(request, "This item was aded tou your cart")
+    return redirect('core:order-summary')
 
 @login_required
 def remove_from_cart(request, slug):

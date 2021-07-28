@@ -1,9 +1,5 @@
-from core.services.db_services import get_order_item_title, get_order_quantity, get_all_objects_from_order_items, check_adress_by_street_adress, filter_and_check_default_adress, create_a_new_devilered_order_object, delete_all_items_from_order, delete_order
-
-
-def delete_order_if_order_items_empty():
-    if get_all_objects_from_order_items.count() == 0:
-        pass
+from core.services.db_services import create_a_new_address, add_billing_address_to_the_order, change_status_default_address, add_shipping_adress_to_the_order,  get_all_objects_from_order_items, check_adress_by_street_adress, filter_and_check_default_adress, create_a_new_devilered_order_object, delete_all_items_from_order, delete_order
+from core.services.form_services import validate_from_for_whitespaces
 
 
 def get_information_about_order(orders):
@@ -26,8 +22,6 @@ def convert_order_items_into_string_view(orders):
 
 #Buiseness logic checkout view
 
-from core.services.db_services import add_shipping_adress_to_the_order, change_status_default_address, create_a_new_address, add_billing_address_to_the_order
-from core.services.form_services import validate_from_for_whitespaces
 
 
 
@@ -91,6 +85,7 @@ def default_shipping_adress(
     Add shiping adress to the order, if user enable option -
     'save as default' than add this adress to the Adress model
     """
+
     address_shipping_queryset = filter_and_check_default_adress(
         user=user,
         adress_type='S',
@@ -375,7 +370,7 @@ def disabled_billing_and_default_logic(
 
 
 
-#Logic to crate devilered object and delete order
+#Logic to create devilered object and delete order
 
 def create_delivered_object_item(user):
     """Create devilered object item"""

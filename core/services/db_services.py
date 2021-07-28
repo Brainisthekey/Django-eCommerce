@@ -1,4 +1,5 @@
 from django.db.models.query_utils import Q
+from django.utils import timezone
 from core.models import Adress, Order, Item, OrderDevilevered, OrderItem, Coupon
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
@@ -30,6 +31,11 @@ def filter_order_objects(user, ordered):
         return Order.objects.filter(user=user, ordered=False).first()
     return None
 
+def create_order_object(user, order, order_item):
+    """Create a new order"""
+    ordered_date = timezone.now()
+    return Order.objects.create(user=user, ordered_date=ordered_date)
+
 def add_shipping_adress_to_the_order(order, adress_queryset):
     """Add shipping address to the order"""
     order.shipping_adress = adress_queryset
@@ -40,6 +46,8 @@ def add_billing_address_to_the_order(order, adress_queryset):
     order.billing_adress = adress_queryset
     save_order_changes(order)
 
+def add_item_to_the_order(order, order_item):
+    order.items.add(order_item)
 
 def remove_item_from_orders(user, slug, ordered):
     """Remove definite item from Order model"""
@@ -48,6 +56,7 @@ def remove_item_from_orders(user, slug, ordered):
 def delete_order(user, ordered):
     """Delete Order if order items is empty"""
     filter_order_objects(user=user, ordered=False).delete()
+
 
 # Operation with model OrderItems
 
@@ -58,6 +67,19 @@ def get_all_objects_from_order_items():
 def delete_all_items_from_order(orders):
     """Delete all items from OrderItem model"""
     orders.delete()
+
+def get_order_item_or_create(user, slug):
+    item = get_object_or_404(klass=Item, slug=slug)
+    return OrderItem.objects.get_or_create(
+        user=user,
+        item=item,
+        ordered=False
+    )[0]
+
+def change_order_quantity(order_item):
+    """Change quantity order"""
+    order_item.quantity += 1
+    order_item.save()
 
 def filter_order_item_objects(user, slug, ordered):
     """Filtering objects in OrderItem model"""
@@ -94,6 +116,7 @@ def get_order_quantity(order):
 def get_order_item_title(order):
     """Get order itemm title"""
     return order.item.title
+
 
 # Operation with model Coupon
    
