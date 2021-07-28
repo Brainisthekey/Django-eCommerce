@@ -95,7 +95,6 @@ def default_shipping_adress(
     Add shiping adress to the order, if user enable option -
     'save as default' than add this adress to the Adress model
     """
-
     address_shipping_queryset = filter_and_check_default_adress(
         user=user,
         adress_type='S',

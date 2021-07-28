@@ -198,7 +198,7 @@ class CheckoutView(LoginRequiredMixin, View):
                 adress_type="B"
             )
             
-            if billing_adress_or_error or shipping_adress_or_error == 'Please fill in all required fields':
+            if billing_adress_or_error == 'Please fill in all required fields' or shipping_adress_or_error == 'Please fill in all required fields':
                 messages.info(self.request, 'Please fill in all required fields')
                 return redirect('core:checkout')
             
