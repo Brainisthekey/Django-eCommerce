@@ -27,7 +27,14 @@ def convert_order_items_into_string_view(orders):
 #Buiseness logic checkout view
 
 def check_option_set_default(set_default_shipping, shipping_adress, user, adress_type):
-    """Save adress to default shipping adress"""
+    """
+    Check option - Save as default shipping address
+    if enabled option and user has default adress:
+        Change status previosly default adress and set a new
+        Set up a new default shipping address
+    if disabled option:
+        Set up a new default shipping address
+    """
     address_queryset = filter_and_check_default_adress(
         user=user,
         adress_type=adress_type,
@@ -49,7 +56,9 @@ def validate_and_create_a_new_adress(
         shipping_zip,
         adress_type
     ):
-    """Validate form for whitespces and add shiping address to the order"""
+    """
+    Validate form for whitespces and add shiping address to the order
+    """
     if validate_from_for_whitespaces([shipping_address1, shipping_country, shipping_zip]):
         filtered_billing_adress = check_adress_by_street_adress(
             user=user,
@@ -82,6 +91,7 @@ def default_shipping_adress(
         adress_type
     ):
     """
+    Search default shipping adress and default billing adress
     Add shiping adress to the order, if user enable option -
     'save as default' than add this adress to the Adress model
     """
@@ -133,17 +143,17 @@ def check_default_shipping_adress(order, address_shipping_queryset):
         return 'Successfully added to the order'
 
 
-#Logic for the same billing adress as shipping with enabled and disabled option save
+#######Logic for the same billing adress as shipping with enabled and disabled option save
 
 def filtered_billing_adress_and_create_new(
-    user,
-    order,
-    billing_address1,
-    shipping_address1,
-    shipping_address2,
-    shipping_country,
-    shipping_zip,
-    set_default_billing
+        user,
+        order,
+        billing_address1,
+        shipping_address1,
+        shipping_address2,
+        shipping_country,
+        shipping_zip,
+        set_default_billing
     ):
     """
     Filter billing adrees and if not exists create
@@ -342,9 +352,9 @@ def the_same_billing_logic(
             )
 
 
-#Logic if options are disabled - 
-# Billing address is the same as my shipping address
-# Save as default billing address
+#Logic if options are disabled:
+# (Billing address is the same as my shipping address)
+# (Save as default billing address)
 
 def disabled_billing_and_default_logic(
     user,
@@ -358,6 +368,11 @@ def disabled_billing_and_default_logic(
     billing_zip,
     adress_type
     ):
+    """
+    The logic if user disable 2 options:
+        1. Billing address is the same as my shipping address
+        2. Save as default shipping address
+    """
     if not any((same_billing_address, use_default_billing)):
         return validate_and_create_a_new_adress(
             user=user,
@@ -391,4 +406,4 @@ def delete_order_and_order_items(user):
     orders = get_all_objects_from_order_items()
     delete_all_items_from_order(orders=orders)
     delete_order(user=user, ordered=False)
-    return 'The order has been send'
+    return True

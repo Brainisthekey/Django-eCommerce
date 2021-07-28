@@ -204,7 +204,7 @@ class CheckoutView(LoginRequiredMixin, View):
             
             create_delivered_object_item(user=self.request.user)
             deleting_operation = delete_order_and_order_items(user=self.request.user)
-            if deleting_operation == 'The order has been send':
+            if deleting_operation:
                 messages.info(self.request, 'The order has been send')
                 return redirect('core:home')
         messages.warning(self.request, "Failed Checkout")
