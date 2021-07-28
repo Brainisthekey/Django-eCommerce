@@ -1,5 +1,5 @@
-from django.shortcuts import redirect, render
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import redirect, render
 from django.views.generic.detail import DetailView
 from core.models import Item
 from django.views.generic import ListView, View
@@ -7,12 +7,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckkOutForm, CouponForm
-from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order, check_item_order_quantity, get_coupon, add_and_save_coupon_to_the_order, check_user_for_active_coupon, filtering_items_by_caegories, filtering_items_by_icontains_filter, filter_and_check_default_adress, add_shipping_adress_to_the_order, create_a_new_address, change_status_default_address, change_pk_of_address, change_address_type_for_billing, add_billing_address_to_the_order, create_a_new_devilered_order_object, delete_all_items_from_order, check_adress_by_street_adress, get_order_item_or_create, add_item_to_the_order, create_order_object, change_order_quantity
+from core.services.db_services import get_order_objects, filter_order_item_objects_by_slag, filter_order_objects, filter_order_item_objects, remove_item_from_orders, delete_item_from_order_items, get_all_objects_from_order_items, delete_order, check_item_order_quantity, get_coupon, add_and_save_coupon_to_the_order, check_user_for_active_coupon, filtering_items_by_caegories, filtering_items_by_icontains_filter, filter_and_check_default_adress, get_order_item_or_create, add_item_to_the_order, create_order_object, change_order_quantity
 from core.services.business_logic import default_shipping_adress, the_same_billing_logic, disabled_billing_and_default_logic, create_delivered_object_item, delete_order_and_order_items
 
 
 class HomeView(ListView):
-    
+    """Home page view"""
     model = Item
     paginate_by = 8
     template_name = 'home-page.html'
@@ -20,14 +20,15 @@ class HomeView(ListView):
 
 
 class ItemDetailView(DetailView):
-
+    """Items detail view"""
     model = Item
     template_name = 'product-page.html'
 
 
 class OrderSummaryView(LoginRequiredMixin, View):
-
+    """Order summary view"""
     def get(self, *args, **kwargs):
+        """Try to get Order Items"""
         try:
             order_items = get_order_objects(user=self.request.user, ordered=False)
             context = {'objects': order_items}
@@ -36,9 +37,11 @@ class OrderSummaryView(LoginRequiredMixin, View):
             messages.info(self.request, 'Your shopping cart is empty')
             return redirect("/")
 
-class AddCouponView(View):
 
+class AddCouponView(View):
+    """Add coupon to user"""
     def post(self, *args, **kwargs):
+        """Validate coupon code from user and add to account if valid"""
         form = CouponForm(self.request.POST or None)
         if form.is_valid():
             code = form.cleaned_data.get('code')
@@ -59,46 +62,51 @@ class AddCouponView(View):
         messages.info(self.request, "You do not have an active order")
         return redirect("core:checkout")
 
+
 class RomanceView(View):
-
+    """Filtered Item view by category - romance"""
     def get(self, *args, **kwargs):
-
+        """Get items in category R(Romance)"""
         romance_items = filtering_items_by_caegories(category='R')
         context = {'items': romance_items}
         return render(self.request, 'home-page.html', context=context)
 
+
 class EducationReferenceView(View):
-
+    """Filtered Item view by category - education and reference"""
     def get(self, *args, **kwargs):
-
+        """Get items in category E(Education & Reference)"""
         education_reference_items = filtering_items_by_caegories(category='E')
         context = {'items': education_reference_items}
         return render(self.request, 'home-page.html', context=context)
 
+
 class BusinessInvestingView(View):
-
+    """Filtered Item view by category - inversting"""
     def get(self, *args, **kwargs):
-
+        """Get items in category B(Business & Investing)"""
         business_investing_items = filtering_items_by_caegories(category='B')
         context = {'items': business_investing_items}
         return render(self.request, 'home-page.html', context=context)
 
 
 class SearchResult(ListView):
-
+    """Search items in Item model"""
     model = Item
     template_name = 'home-page.html'
     context_object_name = 'items'
 
     def get_queryset(self):
+        """Filtering items by params"""
         query = self.request.GET.get('q')
         items = filtering_items_by_icontains_filter(query=query)
         return items
 
 
 class CheckoutView(LoginRequiredMixin, View):
-    
+    """Checkout view"""
     def get(self, *args, **kwargs):
+        """Add default adress to checkout view if exists"""
         try:
             order_queryset = get_order_objects(user=self.request.user, ordered=False)
             context = {
@@ -128,6 +136,7 @@ class CheckoutView(LoginRequiredMixin, View):
             return redirect("/")
 
     def post(self, *args, **kwargs):
+        """The whole logic of validate Checkout form"""
         order = get_order_objects(user=self.request.user, ordered=False)
         form = CheckkOutForm(self.request.POST or None)
         if form.is_valid():
@@ -201,9 +210,13 @@ class CheckoutView(LoginRequiredMixin, View):
         messages.warning(self.request, "Failed Checkout")
         return redirect('core:checkout')
         
+
 @login_required
 def add_to_cart(request, slug):
-    
+    """
+    Functionality to add item to the cart
+    Or change quantity if item exists
+    """
     order_item = get_order_item_or_create(user=request.user, slug=slug)
     order = filter_order_objects(user=request.user, ordered=False)
     if order:
@@ -228,9 +241,13 @@ def add_to_cart(request, slug):
     messages.info(request, "This item was aded tou your cart")
     return redirect('core:order-summary')
 
+
 @login_required
 def remove_from_cart(request, slug):
-    
+    """
+    Remove items from cart if quantity more than 1
+    Trash icon
+    """
     filtered_order_objects = filter_order_objects(user=request.user, ordered=False)
 
     if filtered_order_objects:
@@ -266,7 +283,7 @@ def remove_from_cart(request, slug):
 
 @login_required
 def remove_single_item_from_cart(request, slug):
-
+    """Remove single item from cart"""
     filtered_order_objects = filter_order_objects(user=request.user, ordered=False)
     if filtered_order_objects:
         filtered_order_items_by_slag = filter_order_item_objects_by_slag(
