@@ -65,10 +65,12 @@ class TestAppModels(TestCase):
     def test_coupon_model_representation(self):
         """Test Coupon model representation"""
         self.assertEqual(str(self.coupon), 'test')
+        self.assertTrue(isinstance(self.coupon, Coupon))
 
     def test_adress_model_representation(self):
         """Test Adress model representation"""
         self.assertEqual(str(self.adress), 'test')
+        self.assertTrue(isinstance(self.adress, Adress))
 
     def test_model_item(self):
         """Test model Item"""
@@ -76,6 +78,7 @@ class TestAppModels(TestCase):
         self.assertEqual(self.item.get_add_to_cart_url(), '/add-to-cart/test/')
         self.assertEqual(self.item.get_remove_from_cart_url(), '/remove-from-cart/test/')
         self.assertEqual(str(self.item), 'test')
+        self.assertTrue(isinstance(self.item, Item))
 
     def test_model_order_item(self):
         """Test model Order Item"""
@@ -93,6 +96,7 @@ class TestAppModels(TestCase):
         self.item.discount_price=None
         self.assertEqual(order_item.get_finall_price(), 10)
         self.assertEqual(str(order_item), '1 of test')
+        self.assertTrue(isinstance(self.order_item, OrderItem))
     
     def test_order(self):
         """Test model Order"""
@@ -103,6 +107,7 @@ class TestAppModels(TestCase):
         self.assertEqual(self.order.items.last().quantity, 2)
         self.assertEqual(str(self.order), 'test')
         self.assertEqual(self.order.get_total(), 16)
+        self.assertTrue(isinstance(self.order, Order))
 
 
 
