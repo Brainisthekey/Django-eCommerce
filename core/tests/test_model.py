@@ -6,11 +6,12 @@ from django.contrib.auth.models import User
 
 class TestAppModels(TestCase):
     
-    def setUp(self):
-        self.user = User.objects.create(username='test', password='user')
-        self.coupon = Coupon.objects.create(code='test', amount=5)
-        self.adress = Adress.objects.create(
-            user=self.user,
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create(username='test', password='user')
+        cls.coupon = Coupon.objects.create(code='test', amount=5)
+        cls.adress = Adress.objects.create(
+            user=cls.user,
             street_adress='test',
             apartment_adress='test',
             country='Ukraine',
@@ -18,7 +19,7 @@ class TestAppModels(TestCase):
             adress_type='B',
             default=True
         )
-        self.item = Item.objects.create(
+        cls.item = Item.objects.create(
             title='test',
             price=10,
             discount_price=5,
@@ -28,7 +29,7 @@ class TestAppModels(TestCase):
             slug='test',
             image='test'
         )
-        self.item_2 = Item.objects.create(
+        cls.item_2 = Item.objects.create(
             title='test_2',
             price=10,
             discount_price=8,
@@ -38,26 +39,26 @@ class TestAppModels(TestCase):
             slug='test_2',
             image='test_2'
         )
-        self.order_item = OrderItem.objects.create(
+        cls.order_item = OrderItem.objects.create(
             quantity=1,
             ordered=False,
-            item=self.item,
-            user=self.user
+            item=cls.item,
+            user=cls.user
         )
-        self.order_item_2 = OrderItem.objects.create(
+        cls.order_item_2 = OrderItem.objects.create(
             quantity=2,
             ordered=False,
-            item=self.item_2,
-            user=self.user
+            item=cls.item_2,
+            user=cls.user
         )
-        self.order = Order.objects.create(
-            user=self.user,
+        cls.order = Order.objects.create(
+            user=cls.user,
             start_date=timezone.now(),
             ordered_date=timezone.now(),
             ordered=False,
-            billing_adress=self.adress,
-            shipping_adress=self.adress,
-            coupon=self.coupon,
+            billing_adress=cls.adress,
+            shipping_adress=cls.adress,
+            coupon=cls.coupon,
         )
 
 
