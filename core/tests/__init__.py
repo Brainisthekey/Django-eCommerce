@@ -1,2 +1,2 @@
-from .test_home_page import *
+from .test_views import *
 from .test_model import *

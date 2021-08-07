@@ -27,7 +27,7 @@ class TestAppModels(TestCase):
             category='R',
             lable='P',
             slug='test',
-            image='test'
+            image='verity'
         )
         cls.item_2 = Item.objects.create(
             title='test_2',
