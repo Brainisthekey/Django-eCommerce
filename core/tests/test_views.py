@@ -3,7 +3,6 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from core.models import Item, Order, Adress, Coupon, OrderItem
 from django.utils import timezone
-from django.contrib.auth import get_user_model
 
 
 class TestViews(TestCase):
