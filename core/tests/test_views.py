@@ -6,11 +6,11 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 
-#I would change the name to - TestViewsForAuthorizatedUser
 class TestViews(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        """Set up all static models"""
         cls.coupon = Coupon.objects.create(code='test', amount=5)
         cls.user = User.objects.create(username='test')
         cls.user.set_password('testpassword')
@@ -80,6 +80,7 @@ class TestViews(TestCase):
         self.assertIn('test_product', html)
 
     def test_order_summary_view(self):
+        """Test the Order Summary page"""
         response = self.c.get(reverse('core:order-summary'), follow=True)
         html = response.content.decode('utf-8')
         self.assertEqual(response.status_code, 200)
@@ -100,13 +101,8 @@ class TestViews(TestCase):
         #Assert for quantity
         self.assertIn('1', html)
 
-        self.order_item.delete()
-        self.order.delete()
-        
-        response = self.c.get(reverse('core:checkout'), follow=True)
-        print(response.status_code)
-
     def test_checkout_view(self):
+        """Test Checkout page"""
         response = self.c.get(reverse('core:checkout'), follow=True)
         html = response.content.decode('utf-8')
         self.assertEqual(response.status_code, 200)
@@ -118,24 +114,36 @@ class TestViews(TestCase):
         #Assert for total price
         self.assertIn('$10.0', html)
 
-        self.order_item.delete()
+    def test_views_if_order_is_deleted(self):
+        """
+        Test for Checkout and Order Summary view
+        If order has been deleted
+        """
         self.order.delete()
-        
+        self.order_item.delete()
         response = self.c.get(reverse('core:checkout'), follow=True)
-        print(response.status_code)
-        #print(response)
-        #print(response.content)
+        html = response.content.decode('utf-8')
+        
+        #Assert error when try to go at the Checkout page without active order
+        self.assertIn('You do not have an active order', html)
 
-    
+        response = self.c.get(reverse('core:order-summary'), follow=True)
+        html = response.content.decode('utf-8')
+
+        #Assert error when try to go at the Order Summary page without active order
+        self.assertIn('Your shopping cart is empty', html)
+
 
 class TestViewsAnonimousUser(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        """Set up a static client"""
         cls.c = Client()
 
 
     def test_checkout_view_non_auth(self):
+        """Test Checkout view for anonymous user"""
         response = self.c.get(reverse('core:checkout'))
 
         #Assert status code for redirect
@@ -146,6 +154,7 @@ class TestViewsAnonimousUser(TestCase):
         self.assertTemplateUsed(response, 'account/login.html')
 
     def test_order_summary_non_auth(self):
+        """Test Order Summary view for anonymous user"""
         response = self.c.get(reverse('core:order-summary'))
 
         #Check status code for redirect
