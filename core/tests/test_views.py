@@ -103,8 +103,16 @@ class TestViews(TestCase):
     def test_checkout_view(self):
         response = self.c.get(reverse('core:checkout'), follow=True)
         html = response.content.decode('utf-8')
-        #self.assertIn('Your cart is empty', html)
-        #self.assertTemplateUsed('checkout.html')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'checkout-page.html')
+
+        #Assert for title and quantity
+        self.assertIn('<b>1</b> x test_product', html)
+
+        #Assert for total price
+        self.assertIn('$10.0', html)
+    
+    
 
 
 
