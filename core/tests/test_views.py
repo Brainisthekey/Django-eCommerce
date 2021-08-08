@@ -1,21 +1,26 @@
 from django.contrib.auth.models import User
 from django.test import TestCase, Client
 from django.urls import reverse
-from core.models import Item, Order, Adress, Coupon
+from core.models import Item, Order, Adress, Coupon, OrderItem
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
+
+#I would change the name to - TestViewsForAuthorizatedUser
 class TestViews(TestCase):
 
     @classmethod
     def setUpTestData(cls):
         cls.coupon = Coupon.objects.create(code='test', amount=5)
-        cls.user = User.objects.create(username='test', password='user')
+        cls.user = User.objects.create(username='test')
+        cls.user.set_password('testpassword')
+        cls.user.save()
         cls.c = Client()
+        cls.c.login(username='test', password='testpassword')
         cls.item = Item.objects.create(
             title='test_product',
-            price=10,
-            discount_price=5,
+            price=20,
+            discount_price=15,
             description='test_description',
             category='R',
             lable='P',
@@ -40,14 +45,22 @@ class TestViews(TestCase):
             shipping_adress=cls.adress,
             coupon=cls.coupon,
         )
+        cls.order_item = OrderItem.objects.create(
+            quantity=1,
+            ordered=False,
+            item=cls.item,
+            user=cls.user
+        )
+        cls.order.items.add(cls.order_item)
 
     def test_url_allowed_hosts_home_page(self):
         """Test connection to home page"""
         response = self.c.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed('home-page.html')
+        self.assertTemplateUsed(response, 'home-page.html')
     
     def test_home_page_html(self):
+        """Test home page context"""
         response = self.c.get('/')
         html = response.content.decode('utf-8')
         self.assertIn('test_product', html)
@@ -59,17 +72,39 @@ class TestViews(TestCase):
 
 
     def test_url_allowed_hosts_product_page(self):
-
+        """Test the Product page"""
         response = self.c.get(reverse('core:product', args=['verity']))
+        html = response.content.decode('utf-8')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'product-page.html')
+        self.assertIn('test_product', html)
 
     def test_order_summary_view(self):
-        #https://stackoverflow.com/questions/63054997/difference-between-user-objects-create-user-vs-user-objects-create-vs-user
-        #I just found the solution, User.create.... and User.create_user
-        #self.user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
-        self.c.login(username='john', password='johnpassword')
         response = self.c.get(reverse('core:order-summary'), follow=True)
-        print(response.content)
-        self.assertTemplateUsed('order-summary.html')
+        html = response.content.decode('utf-8')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'order-summary.html')
+
+        #Assert for regular price
+        self.assertIn('$20.0', html)
+
+        #Assert for discount price
+        self.assertIn('$15.0', html)
+
+        #Assert for total price
+        self.assertIn('$10.0', html)
+
+        #Assert for coupon
+        self.assertIn('$5.0', html)
+
+        #Assert for quantity
+        self.assertIn('1', html)
+
+    def test_checkout_view(self):
+        response = self.c.get(reverse('core:checkout'), follow=True)
+        html = response.content.decode('utf-8')
+        #self.assertIn('Your cart is empty', html)
+        #self.assertTemplateUsed('checkout.html')
+
 
 

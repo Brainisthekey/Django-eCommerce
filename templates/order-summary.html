@@ -20,7 +20,7 @@
                 <tr>
                   <th scope="row">{{ forloop.counter }}</th>
                   <td>{{ order_item.item.title }}</td>
-                  <td>{{ order_item.item.price }}</td>
+                  <td>${{ order_item.item.price }}</td>
                   <td>
                       <a href="{% url 'core:remove_single_item_from_cart' order_item.item.slug %}"><i class="fas fa-minus mr-2"></i></a>
                       {{ order_item.quantity }}
