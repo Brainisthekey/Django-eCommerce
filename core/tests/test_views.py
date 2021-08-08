@@ -100,6 +100,12 @@ class TestViews(TestCase):
         #Assert for quantity
         self.assertIn('1', html)
 
+        self.order_item.delete()
+        self.order.delete()
+        
+        response = self.c.get(reverse('core:checkout'), follow=True)
+        print(response.status_code)
+
     def test_checkout_view(self):
         response = self.c.get(reverse('core:checkout'), follow=True)
         html = response.content.decode('utf-8')
@@ -111,8 +117,43 @@ class TestViews(TestCase):
 
         #Assert for total price
         self.assertIn('$10.0', html)
+
+        self.order_item.delete()
+        self.order.delete()
+        
+        response = self.c.get(reverse('core:checkout'), follow=True)
+        print(response.status_code)
+        #print(response)
+        #print(response.content)
+
     
-    
+
+class TestViewsAnonimousUser(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.c = Client()
+
+
+    def test_checkout_view_non_auth(self):
+        response = self.c.get(reverse('core:checkout'))
+
+        #Assert status code for redirect
+        self.assertEqual(response.status_code, 302)
+
+        #Assert redirect to the right page
+        response = self.c.get(reverse('core:checkout'), follow=True)
+        self.assertTemplateUsed(response, 'account/login.html')
+
+    def test_order_summary_non_auth(self):
+        response = self.c.get(reverse('core:order-summary'))
+
+        #Check status code for redirect
+        self.assertEqual(response.status_code, 302)
+
+        #Assert redirect to the right page
+        response = self.c.get(reverse('core:checkout'), follow=True)
+        self.assertTemplateUsed(response, 'account/login.html')
 
 
 
