@@ -123,7 +123,7 @@ def delete_item_from_order_items(user, slug, ordered):
 
 
 def check_item_order_quantity(item):
-    """Change order quantity if OrderItem quantity more than 1"""
+    """Change order item quantity if OrderItem quantity more than 1"""
     if item.quantity > 1:
         item.quantity -= 1
         item.save()

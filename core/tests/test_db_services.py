@@ -1,9 +1,10 @@
-from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order
+from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order, remove_item_from_orders, delete_order, get_all_objects_from_order_items, delete_all_items_from_order, get_order_item_or_create, change_order_quantity, filter_order_item_objects, filter_order_item_objects_by_slag, delete_item_from_order_items, check_item_order_quantity, get_order_quantity
 from django.test import TestCase
 from core.models import Item, OrderItem, Order, Adress, Coupon
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.http.response import Http404
 
 
 class TestDBCommands(TestCase):
@@ -91,7 +92,7 @@ class TestDBCommands(TestCase):
         self.assertEqual(get_order_objects(user=self.user, ordered=False), self.order)
 
 
-        #Check if order doesn't exist
+        #Check if order doesn't exist, raise an Error - ObjectDoesNotExist
         self.order.delete()
         with self.assertRaises(ObjectDoesNotExist):
             get_order_objects(user=self.user, ordered=False)
@@ -153,5 +154,118 @@ class TestDBCommands(TestCase):
         #Assert that Item has been added to the Order
         self.assertEqual(self.order.items.all().count(), 1)
 
-    
+    def test_remove_item_from_orders(self):
+        """Test query to remove Item from Order"""
 
+        #Add Item to the Order
+        add_item_to_the_order(order=self.order, order_item=self.order_item)
+        
+        #Remove Item from Order
+        remove_item_from_orders(user=self.user, slug='test', ordered=False)
+        
+        #Assert that Item has been removed from the Order
+        self.assertEqual(self.order.items.all().count(), 0)
+
+    def test_delete_order(self):
+        """Test query to delete Order"""
+
+        #Delete Order
+        delete_order(user=self.user, ordered=False)
+
+        #Check that Order doesn't exist
+        self.assertEqual(Order.objects.all().count(), 0)
+
+
+#Operation with OrderItems
+
+    def test_get_all_objects_from_order_items(self):
+        """Test query to GET all object from the order"""
+
+        #Assert amount of OrderItems
+        self.assertEqual(get_all_objects_from_order_items().count(), 1)
+
+    def test_delete_all_items_from_order(self):
+        """Test query to delete all items from the Order Item"""
+        
+        #Assert OrderItems objects all
+        self.assertEqual(OrderItem.objects.all().count(), 1)
+
+        #Delete all items from the OrderItems
+        delete_all_items_from_order(orders=self.order_item)
+
+        #Assert OrderItems have been removed
+        self.assertEqual(OrderItem.objects.all().count(), 0)
+
+    def test_get_order_item_or_create(self):
+        """Test query to get or create OrderItem object"""
+
+        #Test with existens Item
+        self.assertEqual(get_order_item_or_create(user=self.user, slug='test').item.title, 'test')
+
+        #Test with non existens Item, raise an Error - HTTP404
+        with self.assertRaises(Http404):
+           get_order_item_or_create(user=self.user, slug='fail-test')
+
+    def test_change_order_quantity(self):
+        """Test query to change OrderItem quantity"""
+
+        #Assert current quantity of ordered items
+        self.assertEqual(self.order_item.quantity, 1)
+
+        #Change the OrderItem quantity
+        change_order_quantity(self.order_item)
+
+        #Assert that quantity has been changed
+        self.assertEqual(self.order_item.quantity, 2)
+
+    def test_filter_order_item_objects(self):
+        """Test query to filtering OrderItems object"""
+
+        #Test with existens Item
+        self.assertEqual(filter_order_item_objects(user=self.user, slug='test', ordered=False).item.title, 'test')
+
+        #Test with non existens Item, raise an Error - HTTP404
+        with self.assertRaises(Http404):
+           filter_order_item_objects(user=self.user, slug='fail-test', ordered=False)
+
+
+    def test_filter_order_item_objects_by_slag(self):
+        """Test query to filtering OrderItems object by <slag>"""
+
+        self.order.items.add(self.order_item)
+        #Test with existens Item
+        self.assertEqual(filter_order_item_objects_by_slag(user=self.user, slug='test', order_quaryset=self.order, ordered=False).first().item.title, 'test')
+
+        #Test with non existens Item, raise an Error - HTTP404
+        with self.assertRaises(Http404):
+           filter_order_item_objects(user=self.user, slug='fail-test', ordered=False)
+        
+    def test_delete_item_from_order_items(self):
+        """Test deleting selected Item from OrderItem"""
+
+        #Assert current OrderItem amount equal 1
+        self.assertEqual(OrderItem.objects.all().count(), 1)
+
+        #Delete OrderItem
+        delete_item_from_order_items(user=self.user, slug='test', ordered=False)
+
+        #Assert current OrderItem amount equl 0
+        self.assertEqual(OrderItem.objects.all().count(), 0)
+
+    def test_check_item_order_quantity(self):
+        """Test changing OrderItem quantity"""
+        
+        #Change OrderItem quantity to 2
+        self.order_item.quantity = 2
+
+        #Situation when OrderItem quantity more than 1
+        check_item_order_quantity(item=self.order_item)
+
+        #Assert OrderItem must have to changed to 1
+        self.assertEqual(self.order_item.quantity, 1)
+
+    def test_get_order_quantity(self):
+        """Test get OrderItem quantity"""
+        self.assertEqual(get_order_quantity(order=self.order_item), 1)
+
+    
