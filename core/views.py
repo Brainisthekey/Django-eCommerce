@@ -234,8 +234,6 @@ def add_to_cart(request, slug):
         return redirect('core:order-summary')
     order = create_order_object(
         user=request.user,
-        order=order,
-        order_item=order_item
     )
     add_item_to_the_order(order=order, order_item=order_item)
     messages.info(request, "This item was aded tou your cart")

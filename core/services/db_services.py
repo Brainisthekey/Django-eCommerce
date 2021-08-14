@@ -14,7 +14,7 @@ def filtering_items_by_caegories(category):
 
 
 def filtering_items_by_icontains_filter(query):
-    """Filtering model Item by Q(iconaiins)"""
+    """Filtering model Item by Q(icontains)"""
     return Item.objects.filter(Q(title__icontains=query))
 
 
@@ -34,10 +34,11 @@ def filter_order_objects(user, ordered):
     """Filtering objects in Order model"""
     if Order.objects.filter(user=user, ordered=False).exists():
         return Order.objects.filter(user=user, ordered=False).first()
+    #Actually here we must to return ObjectDoesNotExist, not None
     return None
 
 
-def create_order_object(user, order, order_item):
+def create_order_object(user):
     """Create a new order"""
     ordered_date = timezone.now()
     return Order.objects.create(user=user, ordered_date=ordered_date)
@@ -47,7 +48,7 @@ def add_shipping_adress_to_the_order(order, adress_queryset):
     """Add shipping address to the order"""
     order.shipping_adress = adress_queryset
     save_order_changes(order)
-
+    
 
 def add_billing_address_to_the_order(order, adress_queryset):
     """Add billing address to the order"""
