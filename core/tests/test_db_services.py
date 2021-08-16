@@ -1,4 +1,4 @@
-from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order, remove_item_from_orders, delete_order, get_all_objects_from_order_items, delete_all_items_from_order, get_order_item_or_create, change_order_quantity, filter_order_item_objects, filter_order_item_objects_by_slag, delete_item_from_order_items, check_item_order_quantity, get_order_quantity
+from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order, remove_item_from_orders, delete_order, get_all_objects_from_order_items, delete_all_items_from_order, get_order_item_or_create, change_order_quantity, filter_order_item_objects, filter_order_item_objects_by_slag, delete_item_from_order_items, check_item_order_quantity, get_order_quantity, get_order_item_title, get_coupon, check_user_for_active_coupon
 from django.test import TestCase
 from core.models import Item, OrderItem, Order, Adress, Coupon
 from django.contrib.auth.models import User
@@ -176,7 +176,7 @@ class TestDBCommands(TestCase):
         self.assertEqual(Order.objects.all().count(), 0)
 
 
-#Operation with OrderItems
+#Testing query to model OrderItem
 
     def test_get_all_objects_from_order_items(self):
         """Test query to GET all object from the order"""
@@ -241,7 +241,7 @@ class TestDBCommands(TestCase):
            filter_order_item_objects(user=self.user, slug='fail-test', ordered=False)
         
     def test_delete_item_from_order_items(self):
-        """Test deleting selected Item from OrderItem"""
+        """Test query to deleting selected Item from OrderItem"""
 
         #Assert current OrderItem amount equal 1
         self.assertEqual(OrderItem.objects.all().count(), 1)
@@ -253,7 +253,7 @@ class TestDBCommands(TestCase):
         self.assertEqual(OrderItem.objects.all().count(), 0)
 
     def test_check_item_order_quantity(self):
-        """Test changing OrderItem quantity"""
+        """Test query to changing OrderItem quantity"""
         
         #Change OrderItem quantity to 2
         self.order_item.quantity = 2
@@ -265,7 +265,41 @@ class TestDBCommands(TestCase):
         self.assertEqual(self.order_item.quantity, 1)
 
     def test_get_order_quantity(self):
-        """Test get OrderItem quantity"""
+        """Test query to get OrderItem quantity"""
+        
+        #Assert OrderItem quantity 
         self.assertEqual(get_order_quantity(order=self.order_item), 1)
 
-    
+
+    def test_get_order_item_title(self):
+        """Test query to get the OrderItem title"""
+
+        #Assert OrderItem title
+        self.assertEqual(get_order_item_title(order=self.order_item), 'test')
+
+#Testing query to model Coupon
+
+    def test_get_coupon(self):
+        """Test query to get coupon object if exists else Object doesn't exist"""
+
+        #Assert the coupon which doesn't exist
+        #And becaouse we don't have a try except block, we can't check that ErrorRaises
+        self.assertIsNone(get_coupon(code='Does not exist'))
+        
+        #Get the coupon which exist
+        self.assertEqual(get_coupon(code='test'), self.coupon)
+
+    def test_check_user_for_active_coupon(self):
+        """Test query to check the Order for active coupon"""
+
+        #Situation when Order has a coupon
+        self.assertEqual(check_user_for_active_coupon(order=self.order), self.coupon)
+
+#Question here
+
+        #Must to delete coupon, but can't
+        self.order.coupon = None
+
+        #Situation when Order doesn't have an active coupon
+        self.assertIsNone(check_user_for_active_coupon(order=self.order))
+        

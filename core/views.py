@@ -49,7 +49,7 @@ class AddCouponView(View):
             if check_user_for_active_coupon(order=order):
                 messages.warning(self.request, 'You can not use one coupon two times')
                 return redirect("core:checkout")
-            if get_coupon(self.request, code):
+            if get_coupon(code):
                 add_and_save_coupon_to_the_order(
                     order=order,
                     request=self.request,

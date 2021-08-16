@@ -1,4 +1,5 @@
 from django.db.models.query_utils import Q
+from django.http.response import Http404
 from django.utils import timezone
 from core.models import Adress, Order, Item, OrderDevilevered, OrderItem, Coupon
 from django.shortcuts import get_object_or_404
@@ -143,13 +144,13 @@ def get_order_item_title(order):
 
 # Operation with model Coupon
    
-def get_coupon(request, code):
+def get_coupon(code):
     """Get coupon object if exists"""
     try:
-        coupon = Coupon.objects.get(code=code)
+        coupon = get_object_or_404(klass=Coupon, code=code)
         return coupon
-    except ObjectDoesNotExist:
-        messages.info(request, "This coupon does not exist")
+    except Http404:
+        #I must to return ObjectDoesNotExists!!!
         return None
 
 
@@ -162,7 +163,7 @@ def check_user_for_active_coupon(order):
 
 def add_and_save_coupon_to_the_order(order, request, code):
     """Add coupon to the order"""
-    order.coupon = get_coupon(request=request, code=code)
+    order.coupon = get_coupon(code=code)
     save_order_changes(order)
 
 
