@@ -1,6 +1,6 @@
-from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order, remove_item_from_orders, delete_order, get_all_objects_from_order_items, delete_all_items_from_order, get_order_item_or_create, change_order_quantity, filter_order_item_objects, filter_order_item_objects_by_slag, delete_item_from_order_items, check_item_order_quantity, get_order_quantity, get_order_item_title, get_coupon, check_user_for_active_coupon
+from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order, remove_item_from_orders, delete_order, get_all_objects_from_order_items, delete_all_items_from_order, get_order_item_or_create, change_order_quantity, filter_order_item_objects, filter_order_item_objects_by_slag, delete_item_from_order_items, check_item_order_quantity, get_order_quantity, get_order_item_title, get_coupon, check_user_for_active_coupon, filter_and_check_default_adress, check_adress_by_street_adress, create_a_new_address, change_status_default_address, change_address_type_for_billing, create_a_new_devilered_order_object
 from django.test import TestCase
-from core.models import Item, OrderItem, Order, Adress, Coupon
+from core.models import Item, OrderDevilevered, OrderItem, Order, Adress, Coupon
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -11,6 +11,7 @@ class TestDBCommands(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user('testusername', 'test@test.com', 'testpassword')
+        self.second_user = User.objects.create_user('test2username', 'test@test.com', 'test2password')
         self.coupon = Coupon.objects.create(code='test', amount=5)
         self.item = Item.objects.create(
             title='test',
@@ -38,7 +39,16 @@ class TestDBCommands(TestCase):
             item=self.item,
             user=self.user
         )
-        self.adress = Adress.objects.create(
+        self.shipping_adress = Adress.objects.create(
+            user=self.user,
+            street_adress='test',
+            apartment_adress='test',
+            country='Ukraine',
+            zip='test',
+            adress_type='S',
+            default=True
+        )
+        self.billing_adress = Adress.objects.create(
             user=self.user,
             street_adress='test',
             apartment_adress='test',
@@ -52,8 +62,8 @@ class TestDBCommands(TestCase):
             start_date=timezone.now(),
             ordered_date=timezone.now(),
             ordered=False,
-            billing_adress=self.adress,
-            shipping_adress=self.adress,
+            billing_adress=self.billing_adress,
+            shipping_adress=self.shipping_adress,
             coupon=self.coupon,
         )
 
@@ -130,20 +140,20 @@ class TestDBCommands(TestCase):
     def test_add_shipping_adress_to_the_order(self):
         """Test query to add shipping adress to the Order"""
         
-        #Add sjipping adress to the order
-        add_shipping_adress_to_the_order(order=self.order, adress_queryset=self.adress)
+        #Add shipping adress to the order
+        add_shipping_adress_to_the_order(order=self.order, adress_queryset=self.shipping_adress)
 
         #Assert shipping adress in Order
-        self.assertEqual(self.order.shipping_adress, self.adress)
+        self.assertEqual(self.order.shipping_adress, self.shipping_adress)
 
     def test_add_billing_address_to_the_order(self):
         """Test query to add billing adress to the Order"""
 
         #Add billing adress to the order
-        add_billing_address_to_the_order(order=self.order, adress_queryset=self.adress)
+        add_billing_address_to_the_order(order=self.order, adress_queryset=self.billing_adress)
 
         #Assert billing adress in Order
-        self.assertEqual(self.order.billing_adress, self.adress)
+        self.assertEqual(self.order.billing_adress, self.billing_adress)
 
     def test_add_item_to_the_order(self):
         """Test query to add Item to the Order"""
@@ -301,5 +311,85 @@ class TestDBCommands(TestCase):
         #Situation when Order doesn't have an active coupon
         self.assertIsNone(check_user_for_active_coupon(order=self.order))
 
-    def 
+#Testing query to model Adress
+
+    def test_filter_and_check_default_adress(self):
+        """Test query to filter and check default adresses"""
+
+        #Assert existing default billing adress
+        self.assertEqual(filter_and_check_default_adress(user=self.user, adress_type='B'), self.billing_adress)
+
+        #Assert existning default shipping adress
+        self.assertEqual(filter_and_check_default_adress(user=self.user, adress_type='S'), self.shipping_adress)
+
+        #Assert if adress doesn't exist
+        self.assertIsNone(filter_and_check_default_adress(user=self.second_user, adress_type='S'))
+
+    def test_check_adress_by_street_adress(self):
+        """Test query to filter adress by street number"""
+
+        #Assert if shipping adress with this name of street exist
+        self.assertEqual(check_adress_by_street_adress(user=self.user, street_adress='test', adress_type='S'), self.shipping_adress)
+
+        #Assert if billing adress with this name of street exist
+        self.assertEqual(check_adress_by_street_adress(user=self.user, street_adress='test', adress_type='B'), self.billing_adress)
+
+        #Assert if adress doesn't exist
+        self.assertIsNone(check_adress_by_street_adress(user=self.user, street_adress='does not exist', adress_type='B'))
+
+
+    def test_create_a_new_address(self):
+        """Test query to create a new address"""
+
+        #Create a new adress
+        new_adress = create_a_new_address(
+            user=self.user,
+            street_adress='test_create',
+            apartment_adress='test_apartment',
+            country='test_country',
+            zip='testzip',
+            adress_type='B'
+        )
         
+        #Assert that address is instanse of Adress
+        self.assertIsInstance(new_adress, Adress)
+
+        #Assert that address created correctly
+        self.assertEqual(Adress.objects.filter(user=self.user, street_adress='test_create').first(), new_adress)
+
+    def test_change_status_default_address(self):
+        """Test query to change status default adress"""
+
+        #Change status default adress
+        change_status_default_address(address=self.shipping_adress, status=False)
+
+        #Assert that adress changed status
+        self.assertFalse(self.shipping_adress.default)
+
+    def test_change_address_type_for_billing(self):
+        """Test query to change address type for billing"""
+
+        #Change adress statur for billing
+        change_address_type_for_billing(address=self.shipping_adress)
+
+        #Assert that shipping adress has been changed to the billing
+        self.assertEqual(self.shipping_adress.adress_type, 'B')
+
+#Testing query to the OrderDelivered model
+
+    def test_create_a_new_devilered_order_object(self):
+        """Test query to create a new OrderDevilered object"""
+
+        #Create a new OrderDelivered object
+        delivered_items = create_a_new_devilered_order_object(user=self.user, summary_items='test', quantity=1)
+
+        #Assert that devilered items is instance of OrderDevilered
+        self.assertIsInstance(delivered_items, OrderDevilevered)
+
+        #Assert that delivered items created correctly
+        self.assertEqual(OrderDevilevered.objects.filter(user=self.user, quantity=1).first(), delivered_items)
+
+    
+
+
+

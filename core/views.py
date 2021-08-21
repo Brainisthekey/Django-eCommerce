@@ -117,7 +117,6 @@ class CheckoutView(LoginRequiredMixin, View):
             shipping_address_queryset = filter_and_check_default_adress(
                 user=self.request.user,
                 adress_type='S',
-                default=True
             )
             if shipping_address_queryset:
                 context.update({'default_shipping_address': shipping_address_queryset})
@@ -125,7 +124,6 @@ class CheckoutView(LoginRequiredMixin, View):
             billing_address_queryset = filter_and_check_default_adress(
                 user=self.request.user,
                 adress_type='B',
-                default=True
             )
             if billing_address_queryset:
                 context.update({'default_billing_address': billing_address_queryset})

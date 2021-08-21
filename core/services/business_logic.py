@@ -38,7 +38,6 @@ def check_option_set_default(set_default_shipping, shipping_adress, user, adress
     address_queryset = filter_and_check_default_adress(
         user=user,
         adress_type=adress_type,
-        default=True
     )
     if set_default_shipping:
         if address_queryset:
@@ -98,7 +97,6 @@ def default_shipping_adress(
     address_shipping_queryset = filter_and_check_default_adress(
         user=user,
         adress_type='S',
-        default=True
     )
     exist_default_shipping_adress = check_enabled_option_use_default_shipping(
         use_default_shipping=use_default_shipping,
@@ -177,7 +175,6 @@ def filtered_billing_adress_and_create_new(
             address_queryset = filter_and_check_default_adress(
                 user=user,
                 adress_type='B',
-                default=True
             )
             if address_queryset:
                 change_status_default_address(address_queryset, status=False)
@@ -322,12 +319,10 @@ def the_same_billing_logic(
     address_shipping_queryset = filter_and_check_default_adress(
         user=user,
         adress_type='S',
-        default=True
     )
     address_billing_queryset = filter_and_check_default_adress(
         user=user,
         adress_type='B',
-        default=True
     )
     if same_billing_address:
         if check_option_default_shipping(

@@ -175,20 +175,21 @@ def check_user_for_active_coupon(order):
 
 # Operation with model Address
 
-def filter_and_check_default_adress(user, adress_type, default):
+def filter_and_check_default_adress(user, adress_type):
     """Check and filter Address model for default billing and shipping address"""
     adress = Adress.objects.filter(
         user=user,
         adress_type=adress_type,
         default=True
     )
+    #Actually this check must me changed, becaouse adress.exists() do the second query to database
     if adress.exists():
         return adress.first()
     return None
 
 
 def check_adress_by_street_adress(user, street_adress, adress_type):
-    """Chek adress in Adress model by street adress"""
+    """Check adress in Adress model by street adress"""
     adress = Adress.objects.filter(
         user=user,
         street_adress=street_adress,
@@ -219,12 +220,6 @@ def change_status_default_address(address, status):
     address.save()
 
 
-def change_pk_of_address(address):
-    """Change pk of address"""
-    address.pk = None
-    address.save()
-
-
 def change_address_type_for_billing(address):
     """Change address type for billing"""
     address.adress_type = 'B'
@@ -233,9 +228,12 @@ def change_address_type_for_billing(address):
 # Operation with OrderDelivered model
 
 def create_a_new_devilered_order_object(user, summary_items, quantity):
-    """Create a new devilered order objects"""
-    OrderDevilevered.objects.create(
+    """Create a new OrderDevilered objects"""
+    delivered_item = OrderDevilevered.objects.create(
         user=user,
         summary_items=summary_items,
         quantity=quantity
     )
+    delivered_item.save()
+    return delivered_item
+
