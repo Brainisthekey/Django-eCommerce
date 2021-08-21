@@ -295,11 +295,11 @@ class TestDBCommands(TestCase):
         #Situation when Order has a coupon
         self.assertEqual(check_user_for_active_coupon(order=self.order), self.coupon)
 
-#Question here
-
-        #Must to delete coupon, but can't
+        #Set coupon to None
         self.order.coupon = None
 
         #Situation when Order doesn't have an active coupon
         self.assertIsNone(check_user_for_active_coupon(order=self.order))
+
+    def 
         
