@@ -115,7 +115,6 @@ def filter_order_item_objects_by_slag(user, slug, order_quaryset, ordered):
     item = get_object_or_404(klass=Item, slug=slug)
     if order_quaryset.items.filter(item__slug=item.slug).exists():
         return order_quaryset.items.filter(item__slug=item.slug)
-    return None
 
 
 def delete_item_from_order_items(user, slug, ordered):
@@ -161,7 +160,7 @@ def check_user_for_active_coupon(order):
     return None
 
 
-def add_and_save_coupon_to_the_order(order, request, code):
+def add_and_save_coupon_to_the_order(order, code):
     """Add coupon to the order"""
     order.coupon = get_coupon(code=code)
     save_order_changes(order)
@@ -236,4 +235,3 @@ def create_a_new_devilered_order_object(user, summary_items, quantity):
     )
     delivered_item.save()
     return delivered_item
-

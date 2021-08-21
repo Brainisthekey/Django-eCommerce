@@ -52,7 +52,6 @@ class AddCouponView(View):
             if get_coupon(code):
                 add_and_save_coupon_to_the_order(
                     order=order,
-                    request=self.request,
                     code=code
                 )
                 messages.success(self.request, "This coupon was successfully added to your order")

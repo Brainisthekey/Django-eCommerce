@@ -1,4 +1,4 @@
-from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order, remove_item_from_orders, delete_order, get_all_objects_from_order_items, delete_all_items_from_order, get_order_item_or_create, change_order_quantity, filter_order_item_objects, filter_order_item_objects_by_slag, delete_item_from_order_items, check_item_order_quantity, get_order_quantity, get_order_item_title, get_coupon, check_user_for_active_coupon, filter_and_check_default_adress, check_adress_by_street_adress, create_a_new_address, change_status_default_address, change_address_type_for_billing, create_a_new_devilered_order_object
+from core.services.db_services import filtering_items_by_caegories, filtering_items_by_icontains_filter, get_order_objects, save_order_changes, filter_order_objects, create_order_object, add_shipping_adress_to_the_order, add_billing_address_to_the_order, add_item_to_the_order, remove_item_from_orders, delete_order, get_all_objects_from_order_items, delete_all_items_from_order, get_order_item_or_create, change_order_quantity, filter_order_item_objects, filter_order_item_objects_by_slag, delete_item_from_order_items, check_item_order_quantity, get_order_quantity, get_order_item_title, get_coupon, check_user_for_active_coupon, filter_and_check_default_adress, check_adress_by_street_adress, create_a_new_address, change_status_default_address, change_address_type_for_billing, create_a_new_devilered_order_object, add_and_save_coupon_to_the_order
 from django.test import TestCase
 from core.models import Item, OrderDevilevered, OrderItem, Order, Adress, Coupon
 from django.contrib.auth.models import User
@@ -310,6 +310,18 @@ class TestDBCommands(TestCase):
 
         #Situation when Order doesn't have an active coupon
         self.assertIsNone(check_user_for_active_coupon(order=self.order))
+
+    def test_add_and_save_coupon_to_the_order(self):
+        """Test query to add Coupon to the Order"""
+
+        #Delete Coupon from the Order
+        self.order.coupon = None
+
+        #Add coupon to the Order
+        add_and_save_coupon_to_the_order(order=self.order, code='test')
+
+        #Assert that order does have this coupon
+        self.assertEqual(self.order.coupon, self.coupon)
 
 #Testing query to model Adress
 
