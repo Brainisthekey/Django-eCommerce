@@ -137,24 +137,26 @@ def check_default_shipping_adress(order, address_shipping_queryset):
         #Chagne the logic of returns
         add_shipping_adress_to_the_order(order=order, adress_queryset=address_shipping_queryset)
         return 'Successfully added to the order'
+    return 'Queryset does not exist'
 
 
-#######Logic for the same billing adress as shipping with enabled and disabled option save
+#Logic for the same billing adress as shipping with enabled and disabled option save
 
 def filtered_billing_adress_and_create_new(
         user,
         order,
+        set_default_billing,
         billing_address1,
         shipping_address1,
         shipping_address2,
         shipping_country,
-        shipping_zip,
-        set_default_billing
+        shipping_zip
     ):
     """
-    Filter billing adrees and if not exists create
-    If uses has default billing adress, and enagbled option save as default
-    Changed status of default billing adress
+    Three layer of logic:
+        -Filtering billing adress if not exists then create
+        -If user has default billing adress, and enable option 'save as default'
+        -Change status the default adress
     """
     filtered_billing_adress = check_adress_by_street_adress(
         user=user,
@@ -176,7 +178,7 @@ def filtered_billing_adress_and_create_new(
                 adress_type='B',
             )
             if address_queryset:
-                change_status_default_address(address_queryset, status=False)
+                change_status_default_address(address=address_queryset, status=False)
             change_status_default_address(address=billing_adress_as_same, status=True)
         add_billing_address_to_the_order(order=order, adress_queryset=billing_adress_as_same)
         return 'Created a new billing adress'
@@ -229,8 +231,10 @@ def change_status_default_adress_if_not_exist(
             adress_type='B',
         )
         change_status_default_address(address=billing_adress, status=True)
+        return 'Default adress has been changed to new'
     else:
         change_status_default_address(address=filtered_billing_adress, status=True)
+        return 'Default address has been chaned to existent one'
 
 def comprare_shipping_and_billing_adresses(user, address_shipping_queryset, address_billing_queryset):
     """
