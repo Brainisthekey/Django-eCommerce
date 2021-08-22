@@ -117,7 +117,6 @@ def default_shipping_adress(
     if exist_default_shipping_adress == 'Successfully added to the order':
         #See where we can use this message
         return 'User use the default shipping adress'
-
     return 'Please fill in the required shipping address fields'
 
     

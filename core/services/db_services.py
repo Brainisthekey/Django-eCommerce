@@ -3,8 +3,6 @@ from django.http.response import Http404
 from django.utils import timezone
 from core.models import Adress, Order, Item, OrderDevilevered, OrderItem, Coupon
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib import messages
 
 
 # Operation with model Item
