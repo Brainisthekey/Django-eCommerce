@@ -312,12 +312,10 @@ def the_same_billing_logic(
     ):
     """
     The same billing adress
-    Quite dificult logic that includes checking all possible options for pressing buttons
-    (
-        'Billing address is the same as my shipping address'
-        'Save as default shipping address'
-        'Save as default billing address
-    )
+    Quite complicated logic that includes checking all possible options for pressing buttons:
+        -Billing address is the same as my shipping address
+        -Save as default shipping address
+        -Save as default billing address
     """
     address_shipping_queryset = filter_and_check_default_adress(
         user=user,
@@ -349,7 +347,9 @@ def the_same_billing_logic(
             )
 
 
-#Logic if options are disabled:1.(Billing address is the same as my shipping address) and (Save as default billing address)
+#Logic if both options are disabled:
+#   Billing address is the same as my shipping address
+#   Save as default billing address
 
 def disabled_billing_and_default_logic(
     user,
@@ -365,8 +365,8 @@ def disabled_billing_and_default_logic(
     ):
     """
     The logic if user disable 2 options:
-        1. Billing address is the same as my shipping address
-        2. Save as default shipping address
+        -Billing address is the same as my shipping address
+        -Save as default shipping address
     """
     if not any((same_billing_address, use_default_billing)):
         return validate_and_create_a_new_adress(

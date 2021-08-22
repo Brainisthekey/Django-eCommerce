@@ -1,4 +1,4 @@
-from core.services.business_logic import get_information_about_order, convert_order_items_into_string_view, check_option_set_default, check_option_set_default, validate_and_create_a_new_adress, default_shipping_adress, check_enabled_option_use_default_shipping, check_default_shipping_adress, filtered_billing_adress_and_create_new, check_option_default_shipping, change_status_default_adress_if_not_exist
+from core.services.business_logic import get_information_about_order, convert_order_items_into_string_view, check_option_set_default, check_option_set_default, validate_and_create_a_new_adress, default_shipping_adress, check_enabled_option_use_default_shipping, check_default_shipping_adress, filtered_billing_adress_and_create_new, check_option_default_shipping, change_status_default_adress_if_not_exist, comprare_shipping_and_billing_adresses, check_adress_billing_quresytet, check_set_default_shipping_adress, the_same_billing_logic, disabled_billing_and_default_logic, create_delivered_object_item, delete_order_and_order_items
 import unittest
 from core.models import Adress, OrderItem
 from django.test import TestCase
@@ -392,6 +392,301 @@ class TestBuisenessLogic(TestCase):
             address_shipping_queryset=mock_address_shipping_queryset
         ), 'Default adress has been changed to new')
 
-    
 
-    
+    @mock.patch('core.services.business_logic.change_status_default_adress_if_not_exist')
+    @mock.patch('core.services.business_logic.change_status_default_address')
+    def test_comprare_shipping_and_billing_adresses(
+            self,
+            mock_change_status,
+            mock_change_status_not_exist
+        ):
+        """
+        Test the logic:
+            -Compare shipping and billing adress
+            -Change the status of default adress if different adresses
+            -Change the status of default adress if not exists
+        """
+
+        #Situation when address_shipping_queryset not equal address_billing_queryset
+        mock_change_status.return_value = 'test_change_status_default'
+        mock_change_status_not_exist.return_value = 'test_change_status_default_if_not_exist_in_db'
+        mock_address_shipping = mock.Mock(street_adress='test_shipping_street_address')
+        mock_address_billing = mock.Mock(street_adress='test_billing_street_address')
+        comprare_shipping_and_billing_adresses(
+            user='test_user',
+            address_shipping_queryset=mock_address_shipping,
+            address_billing_queryset=mock_address_billing
+        )
+        #Assert that fucntion to change default adress has been called
+        mock_change_status.assert_called_once()
+        mock_change_status_not_exist.assert_called_once()
+
+
+    @mock.patch('core.services.business_logic.change_status_default_adress_if_not_exist')
+    @mock.patch('core.services.business_logic.comprare_shipping_and_billing_adresses')
+    def test_check_adress_billing_quresytet(self, mock_comparing_adress, mock_change_status_if_not_exist):
+        """
+        Test the logic:
+            -Check billing address queryset
+            -If exist call comparing function
+            -Else change the status of default address
+        """
+        #Situation when address_billing_queryset does not exist
+        mock_comparing_adress.return_value = 'test_called_comparing_function'
+        mock_change_status_if_not_exist.return_value = 'test_called_changing_default_adress'
+
+        check_adress_billing_quresytet(
+            user='test_user',
+            address_billing_queryset=None,
+            address_shipping_queryset='test_shipping_address'
+        )
+
+        #Assert that function to change status order has been called
+        mock_change_status_if_not_exist.assert_called_once()
+
+        #Assert that comparing function has not been called
+        mock_comparing_adress.assert_not_called()
+
+        #Situation when address billing queryset exist
+        check_adress_billing_quresytet(
+            user='test_user',
+            address_billing_queryset='test_billing_address',
+            address_shipping_queryset='test_shipping_address'
+        )
+        
+        #Assert that comparing function has been called
+        mock_comparing_adress.assert_called_once()
+
+
+    @mock.patch('core.services.business_logic.filtered_billing_adress_and_create_new')
+    @mock.patch('core.services.business_logic.check_adress_billing_quresytet')
+    def test_check_set_default_shipping_adress(
+            self,
+            mock_check_billing_address,
+            mock_filter_and_create_new_billing
+        ):
+        """
+        Test the logic:
+            -Check option of default shipping adress
+            -If enabled check adress billing queryset
+            -Else filtering billing adress and create new
+        """
+
+        #Situation when User has enable option - set default billing
+        mock_check_billing_address.return_value = 'test_check_billing_queryset'
+        mock_filter_and_create_new_billing.return_value = 'test_filtered_and_created_one'
+        mock_addres_shipping_queryset = mock.Mock(
+            **{
+                'street_adress': 'test_street_adress',
+                'apartment_adress': 'test_apartment_adress',
+                'country': 'test_country',
+                'zip': 'test_zip'
+            }
+        )
+
+        check_set_default_shipping_adress(
+            user='test_user',
+            order='test_order',
+            address_shipping_queryset=mock_addres_shipping_queryset,
+            set_default_billing='test_default_billing',
+            address_billing_queryset='test_address_billing'
+        )
+
+        #Assert that fucntion to check adress billing queryset has been called
+        mock_check_billing_address.assert_called_once()
+
+        #Assert that filtering and creating a new adress fucntion has not been called
+        mock_filter_and_create_new_billing.assert_not_called()
+
+        #Situation when user does not have an active option - set default billing
+        check_set_default_shipping_adress(
+            user='test_user',
+            order='test_order',
+            address_shipping_queryset=mock_addres_shipping_queryset,
+            set_default_billing=None,
+            address_billing_queryset='test_address_billing'
+        )
+
+        #Assert that fucntion to filtering and createing a new address has been called
+        mock_filter_and_create_new_billing.assert_called_once()
+
+
+    @mock.patch('core.services.business_logic.check_set_default_shipping_adress')
+    @mock.patch('core.services.business_logic.check_option_default_shipping')
+    @mock.patch('core.services.business_logic.filter_and_check_default_adress')
+    def test_the_same_billing_logic(
+        self,
+        mock_check_default_addresses,
+        mock_check_option_def_shipping,
+        mock_check_set_default_shipping
+        ):
+        """
+        Test the logic:
+            -Billing address is the same as my shipping address
+            -Save as default shipping address
+            -Save as default billing address
+        """
+        mock_check_default_addresses.return_value = 'test_address'
+        mock_check_set_default_shipping.return_value = 'test_set_as_default'
+        mock_check_option_def_shipping.return_value = 'Added billing adress to the Order'
+
+        #Situation when User has disabled option - the same billing address
+        the_same_billing_logic(
+            user='test_user',
+            order='test_order',
+            same_billing_address=None,
+            use_default_shipping='use_default_shipping',
+            billing_adress1='billing_adress1',
+            shipping_address1='shipping_address1',
+            shipping_address2='shipping_address2',
+            shipping_country='shipping_country',
+            shipping_zip='shipping_zip',
+            set_default_billing='set_default_billing'
+        )
+
+        #Assert that function check_option_default_shipping has not been called
+        mock_check_option_def_shipping.assert_not_called()
+
+        #Assert that function check_set_default_shipping_adress has not been called
+        mock_check_set_default_shipping.assert_not_called()
+
+        #Situation when User has enabled option - the same billing address
+        the_same_billing_logic(
+            user='test_user',
+            order='test_order',
+            same_billing_address='test_same_billing_address',
+            use_default_shipping='use_default_shipping',
+            billing_adress1='billing_adress1',
+            shipping_address1='shipping_address1',
+            shipping_address2='shipping_address2',
+            shipping_country='shipping_country',
+            shipping_zip='shipping_zip',
+            set_default_billing='set_default_billing'
+        )
+
+        #Assert that function filtering_and_check_default_address has been called
+        self.assertEqual(mock_check_default_addresses.call_count, 4)
+
+        #Assert that function filtering_and_check_default_address had pass the correct params
+        mock_check_default_addresses.assert_has_calls([
+            mock.call(user='test_user', adress_type='S'),
+            mock.call(user='test_user', adress_type='B')
+        ])
+
+        #Assert that fucntion check_option_default_shipping has been called
+        mock_check_option_def_shipping.assert_called_once()
+
+        #Assert that function check_option_default_shipping has returned the correct response
+        self.assertEqual(mock_check_option_def_shipping(), 'Added billing adress to the Order')
+
+        #Assert that fucntion check_set_default_shipping_adress has been called
+        mock_check_set_default_shipping.assert_called_once()
+
+
+#Testing logic for disabled both options:
+#   Billing address is the same as my shipping address
+#   Save as default billing address
+
+    @mock.patch('core.services.business_logic.validate_and_create_a_new_adress')
+    def test_disabled_billing_and_default_logic(self, mock_validate_and_create_new):
+        """
+        Test the logic where disabled both options:
+            -Billing address is the same as my shipping address
+            -Save as default shipping address
+        """
+        mock_validate_and_create_new.return_value = 'test_validated_and_created_order'
+        
+        #Situation when user have enable one of two options
+        self.assertEqual(disabled_billing_and_default_logic(
+            user='test_user',
+            order='order',
+            same_billing_address='test_same_billing_address',
+            use_default_billing=None,
+            set_default_billing='test_set_default_billing',
+            billing_address1='test_billing_address1',
+            billing_address2='test_billing_address2',
+            billing_country='test_billing_country',
+            billing_zip='test_billing_zip',
+            adress_type='test_adress_type'
+        ), 'Please fill in the required shipping address fields')
+
+        #Assert that function validate_and_create_a_new_adress was not called
+        mock_validate_and_create_new.assert_not_called()
+
+
+        #Situation when user have disabled the both options
+        disabled_billing_and_default_logic(
+            user='test_user',
+            order='order',
+            same_billing_address=None,
+            use_default_billing=None,
+            set_default_billing='test_set_default_billing',
+            billing_address1='test_billing_address1',
+            billing_address2='test_billing_address2',
+            billing_country='test_billing_country',
+            billing_zip='test_billing_zip',
+            adress_type='test_adress_type'
+        )
+
+        #Assert that fucntion validate_and_create_a_new_adress has been called
+        mock_validate_and_create_new.assert_called_once()
+
+#Testing logic for creating devilered object and delete order
+
+    @mock.patch('core.services.business_logic.create_a_new_devilered_order_object')
+    @mock.patch('core.services.business_logic.convert_order_items_into_string_view')
+    @mock.patch('core.services.business_logic.get_information_about_order')
+    @mock.patch('core.services.business_logic.get_all_objects_from_order_items')
+    def test_create_delivered_object_item(
+        self,
+        mock_get_all_order_items,
+        mock_get_info_order,
+        mock_convert_order_into_string,
+        mock_create_new_devilered_item
+    ):
+        """Testing the logic for creating devilered object item"""
+        mock_get_all_order_items.return_value = 'test_get_all_order_items'
+        mock_get_info_order.return_value = '1', 'test_info_order'
+        mock_convert_order_into_string.return_value = 'test_convertation'
+        mock_create_new_devilered_item.return_value = 'test_create_item'
+
+        create_delivered_object_item(user='test_user')
+
+        #Assert that fucntion get_all_objects_from_order_items has been called
+        mock_get_all_order_items.assert_called_once()
+
+        #Assert that fucntion get_information_about_order has been called
+        mock_get_info_order.assert_called_once()
+
+        #Assert that fucntion convert_order_items_into_string_view has been called
+        mock_convert_order_into_string.assert_called_once()
+
+        #Assert that fucntion create_a_new_devilered_order_object has been called
+        mock_create_new_devilered_item.assert_called_once()
+
+
+    @mock.patch('core.services.business_logic.delete_order')
+    @mock.patch('core.services.business_logic.delete_all_items_from_order')
+    @mock.patch('core.services.business_logic.get_all_objects_from_order_items')
+    def test_delete_order_and_order_items(
+        self,
+        mock_get_all_order_items,
+        mock_delete_all_items,
+        mock_delete_order
+    ):
+        """Testing the logic for deleting Order and OrderItems"""
+        mock_get_all_order_items.return_value = 'test_get_all_order_items'
+        mock_delete_all_items.return_value = 'test_delete_all_items'
+        mock_delete_order.return_value = 'test_delete_order'
+
+        #Assert that fucntion return a correct response
+        self.assertEqual(delete_order_and_order_items(user='test_user'), True)
+
+        #Assert that fucntion get_all_objects_from_order_items has been called
+        mock_get_all_order_items.assert_called_once()
+
+        #Assert that fucntion delete_all_items_from_order has been called
+        mock_delete_all_items.assert_called_once()
+
+        #Assert that fucntion delete_order has been called
+        mock_delete_order.assert_called_once()
