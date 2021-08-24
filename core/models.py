@@ -6,25 +6,26 @@ from django.db.models.fields import CharField, IntegerField, TextField
 
 
 CATEGORY_CHOICES = (
-    ('R', 'Romance'),
-    ('B', 'Business & Investing'),
-    ('E', 'Education & Reference')
+    ("R", "Romance"),
+    ("B", "Business & Investing"),
+    ("E", "Education & Reference"),
 )
 
 LABEL_CHOICES = (
-    ('P', 'primary'),
-    ('S', 'secondary'),
-    ('D', 'danger')
+    ("P", "primary"),
+    ("S", "secondary"),
+    ("D", "danger")
 )
 
 ADRESS_CHOICES = (
-    ('B', 'Billing'),
-    ('S', 'Shipping'),
+    ("B", "Billing"),
+    ("S", "Shipping"),
 )
 
 
 class Item(models.Model):
     """Item(Book) model"""
+
     title = models.CharField(max_length=100)
     price = models.FloatField()
     discount_price = models.FloatField(blank=True, null=True)
@@ -36,28 +37,24 @@ class Item(models.Model):
 
     def get_absolute_url(self):
         """Get absolute url to the items"""
-        return reverse('core:product', kwargs={
-            'slug': self.slug
-        })
-    
+        return reverse("core:product", kwargs={"slug": self.slug})
+
     def get_add_to_cart_url(self):
         """Get absulte url to add too cart view"""
-        return reverse('core:add-to-cart', kwargs={
-            'slug': self.slug
-        })
+        return reverse("core:add-to-cart", kwargs={"slug": self.slug})
 
     def get_remove_from_cart_url(self):
         """Get abslute url for remove from cart"""
-        return reverse('core:remove-from-cart', kwargs={
-            'slug': self.slug
-        })
+        return reverse("core:remove-from-cart", kwargs={"slug": self.slug})
 
     def __str__(self):
         """Returning represenntation of Item(Book) title"""
         return self.title
 
+
 class OrderItem(models.Model):
     """Order items model"""
+
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -74,7 +71,7 @@ class OrderItem(models.Model):
     def get_amount_saved(self):
         """The difference between the starting price and the discount"""
         return self.get_total_item_price() - self.get_total_item_discount_price()
-    
+
     def get_finall_price(self):
         """Get total price of item"""
         if self.item.discount_price:
@@ -85,16 +82,32 @@ class OrderItem(models.Model):
         """Returning representation of Item title and quantity"""
         return f"{self.quantity} of {self.item.title}"
 
+
 class Order(models.Model):
     """The users order"""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     items = models.ManyToManyField(OrderItem)
     start_date = models.DateTimeField(auto_now_add=True)
     ordered_date = models.DateTimeField()
     ordered = models.BooleanField(default=False)
-    billing_adress = models.ForeignKey('Adress', on_delete=models.SET_NULL, null=True, blank=True, related_name='billing_adress')
-    shipping_adress = models.ForeignKey('Adress', on_delete=models.SET_NULL, null=True, blank=True, related_name='shipping_adress')
-    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True)
+    billing_adress = models.ForeignKey(
+        "Adress",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="billing_adress",
+    )
+    shipping_adress = models.ForeignKey(
+        "Adress",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="shipping_adress",
+    )
+    coupon = models.ForeignKey(
+        "Coupon", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def get_total(self):
         """Get total sum of the order"""
@@ -108,10 +121,11 @@ class Order(models.Model):
     def __str__(self):
         """Returning representation of username"""
         return self.user.username
-        
+
 
 class OrderDevilevered(models.Model):
     """Devilered order items"""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     summary_items = TextField(max_length=1000)
     quantity = IntegerField(default=1)
@@ -119,6 +133,7 @@ class OrderDevilevered(models.Model):
 
 class Adress(models.Model):
     """Adress model"""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     street_adress = models.CharField(max_length=100)
     apartment_adress = models.CharField(max_length=100)
@@ -129,6 +144,7 @@ class Adress(models.Model):
 
     class Meta:
         """Plural adress dispay"""
+
         verbose_name_plural = "Adressess"
 
     def __str__(self):
@@ -138,6 +154,7 @@ class Adress(models.Model):
 
 class Coupon(models.Model):
     """Coupon model"""
+
     code = models.CharField(max_length=15)
     amount = models.FloatField()
 

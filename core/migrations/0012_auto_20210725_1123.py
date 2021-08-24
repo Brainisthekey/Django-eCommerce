@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0011_auto_20210725_1025'),
+        ("core", "0011_auto_20210725_1025"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='orderdevilevered',
-            name='item_title',
+            model_name="orderdevilevered",
+            name="item_title",
         ),
         migrations.AddField(
-            model_name='orderdevilevered',
-            name='item_title',
+            model_name="orderdevilevered",
+            name="item_title",
             field=models.TextField(default=1, max_length=1000),
             preserve_default=False,
         ),

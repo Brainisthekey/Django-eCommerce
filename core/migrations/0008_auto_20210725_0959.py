@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0007_remove_orderdevilevered_item'),
+        ("core", "0007_remove_orderdevilevered_item"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='orderdevilevered',
-            name='item_title',
+            model_name="orderdevilevered",
+            name="item_title",
             field=models.CharField(default=False, max_length=100),
         ),
         migrations.AlterField(
-            model_name='orderdevilevered',
-            name='quantity',
+            model_name="orderdevilevered",
+            name="quantity",
             field=models.IntegerField(),
         ),
     ]

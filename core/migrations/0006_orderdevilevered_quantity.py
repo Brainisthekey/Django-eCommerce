@@ -7,14 +7,18 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0005_orderdevilevered'),
+        ("core", "0005_orderdevilevered"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='orderdevilevered',
-            name='quantity',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='core.OrderItem'),
+            model_name="orderdevilevered",
+            name="quantity",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="core.OrderItem",
+            ),
             preserve_default=False,
         ),
     ]

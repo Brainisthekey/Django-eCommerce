@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 
 # Operation with model Item
 
+
 def filtering_items_by_caegories(category):
     """Filtering model Item by category"""
     return Item.objects.filter(category=category).all()
@@ -18,6 +19,7 @@ def filtering_items_by_icontains_filter(query):
 
 
 # Operation with model Order
+
 
 def get_order_objects(user, ordered):
     """Get objects from Order model"""
@@ -33,7 +35,7 @@ def filter_order_objects(user, ordered):
     """Filtering objects in Order model"""
     if Order.objects.filter(user=user, ordered=False).exists():
         return Order.objects.filter(user=user, ordered=False).first()
-    #Actually here we must to return ObjectDoesNotExist, not None
+    # Actually here we must to return ObjectDoesNotExist, not None
     return None
 
 
@@ -47,7 +49,7 @@ def add_shipping_adress_to_the_order(order, adress_queryset):
     """Add shipping address to the order"""
     order.shipping_adress = adress_queryset
     save_order_changes(order)
-    
+
 
 def add_billing_address_to_the_order(order, adress_queryset):
     """Add billing address to the order"""
@@ -62,7 +64,9 @@ def add_item_to_the_order(order, order_item):
 
 def remove_item_from_orders(user, slug, ordered):
     """Remove definite item from Order model"""
-    filter_order_objects(user=user, ordered=False).items.remove(filter_order_item_objects(user=user, slug=slug, ordered=False))
+    filter_order_objects(user=user, ordered=False).items.remove(
+        filter_order_item_objects(user=user, slug=slug, ordered=False)
+    )
 
 
 def delete_order(user, ordered):
@@ -71,6 +75,7 @@ def delete_order(user, ordered):
 
 
 # Operation with model OrderItems
+
 
 def get_all_objects_from_order_items():
     """Get all objects from OrderItem model"""
@@ -85,11 +90,7 @@ def delete_all_items_from_order(orders):
 def get_order_item_or_create(user, slug):
     """Get or create order item object"""
     item = get_object_or_404(klass=Item, slug=slug)
-    return OrderItem.objects.get_or_create(
-        user=user,
-        item=item,
-        ordered=False
-    )[0]
+    return OrderItem.objects.get_or_create(user=user, item=item, ordered=False)[0]
 
 
 def change_order_quantity(order_item):
@@ -101,11 +102,7 @@ def change_order_quantity(order_item):
 def filter_order_item_objects(user, slug, ordered):
     """Filtering objects in OrderItem model"""
     item = get_object_or_404(klass=Item, slug=slug)
-    return OrderItem.objects.filter(
-        user=user,
-        item=item,
-        ordered=False
-    ).first()
+    return OrderItem.objects.filter(user=user, item=item, ordered=False).first()
 
 
 def filter_order_item_objects_by_slag(user, slug, order_quaryset, ordered):
@@ -140,14 +137,15 @@ def get_order_item_title(order):
 
 
 # Operation with model Coupon
-   
+
+
 def get_coupon(code):
     """Get coupon object if exists"""
     try:
         coupon = get_object_or_404(klass=Coupon, code=code)
         return coupon
     except Http404:
-        #I must to return ObjectDoesNotExists!!!
+        # I must to return ObjectDoesNotExists!!!
         return None
 
 
@@ -170,16 +168,14 @@ def check_user_for_active_coupon(order):
         return order.coupon
     return None
 
+
 # Operation with model Address
+
 
 def filter_and_check_default_adress(user, adress_type):
     """Check and filter Address model for default billing and shipping address"""
-    adress = Adress.objects.filter(
-        user=user,
-        adress_type=adress_type,
-        default=True
-    )
-    #Actually this check must me changed, becaouse adress.exists() do the second query to database
+    adress = Adress.objects.filter(user=user, adress_type=adress_type, default=True)
+    # Actually this check must me changed, becaouse adress.exists() do the second query to database
     if adress.exists():
         return adress.first()
     return None
@@ -197,7 +193,9 @@ def check_adress_by_street_adress(user, street_adress, adress_type):
     return None
 
 
-def create_a_new_address(user, street_adress, apartment_adress, country, zip, adress_type):
+def create_a_new_address(
+    user, street_adress, apartment_adress, country, zip, adress_type
+):
     """Create a new addresss"""
     adress = Adress(
         user=user,
@@ -205,7 +203,7 @@ def create_a_new_address(user, street_adress, apartment_adress, country, zip, ad
         apartment_adress=apartment_adress,
         country=country,
         zip=zip,
-        adress_type=adress_type
+        adress_type=adress_type,
     )
     adress.save()
     return adress
@@ -219,17 +217,17 @@ def change_status_default_address(address, status):
 
 def change_address_type_for_billing(address):
     """Change address type for billing"""
-    address.adress_type = 'B'
+    address.adress_type = "B"
     address.save()
 
+
 # Operation with OrderDelivered model
+
 
 def create_a_new_devilered_order_object(user, summary_items, quantity):
     """Create a new OrderDevilered objects"""
     delivered_item = OrderDevilevered.objects.create(
-        user=user,
-        summary_items=summary_items,
-        quantity=quantity
+        user=user, summary_items=summary_items, quantity=quantity
     )
     delivered_item.save()
     return delivered_item

@@ -6,18 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0013_auto_20210725_1127'),
+        ("core", "0013_auto_20210725_1127"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='orderdevilevered',
-            old_name='item_title',
-            new_name='summary_items',
+            model_name="orderdevilevered",
+            old_name="item_title",
+            new_name="summary_items",
         ),
         migrations.AlterField(
-            model_name='item',
-            name='category',
-            field=models.CharField(choices=[('R', 'Romance'), ('B', 'Business & Investing'), ('E', 'Education & Reference')], max_length=1),
+            model_name="item",
+            name="category",
+            field=models.CharField(
+                choices=[
+                    ("R", "Romance"),
+                    ("B", "Business & Investing"),
+                    ("E", "Education & Reference"),
+                ],
+                max_length=1,
+            ),
         ),
     ]

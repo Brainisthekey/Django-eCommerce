@@ -7,13 +7,20 @@ import django_resized.forms
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_auto_20210724_1508'),
+        ("core", "0002_auto_20210724_1508"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='item',
-            name='image',
-            field=django_resized.forms.ResizedImageField(crop=None, force_format='JPEG', keep_meta=True, quality=75, size=[210, 270], upload_to=''),
+            model_name="item",
+            name="image",
+            field=django_resized.forms.ResizedImageField(
+                crop=None,
+                force_format="JPEG",
+                keep_meta=True,
+                quality=75,
+                size=[210, 270],
+                upload_to="",
+            ),
         ),
     ]
