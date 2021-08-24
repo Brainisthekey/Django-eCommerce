@@ -266,9 +266,7 @@ def add_to_cart(request, slug):
         add_item_to_the_order(order=order, order_item=order_item)
         messages.info(request, "This item was aded tou your cart")
         return redirect("core:order-summary")
-    order = create_order_object(
-        user=request.user,
-    )
+    order = create_order_object(user=request.user)
     add_item_to_the_order(order=order, order_item=order_item)
     messages.info(request, "This item was aded tou your cart")
     return redirect("core:order-summary")
@@ -295,9 +293,7 @@ def remove_from_cart(request, slug):
             all_orders = get_all_objects_from_order_items()
             if all_orders.count() == 0:
                 delete_order(user=request.user, ordered=False)
-                messages.info(
-                    request, "You successfully delete all items from your cart"
-                )
+                messages.info(request, "You successfully delete all items from your cart")
                 return redirect("core:home")
             messages.info(request, "This item was removed from your cart")
             return redirect("core:order-summary")
@@ -326,9 +322,7 @@ def remove_single_item_from_cart(request, slug):
             all_orders = get_all_objects_from_order_items()
             if all_orders.count() == 0:
                 delete_order(user=request.user, ordered=False)
-                messages.info(
-                    request, "You successfully delete all items from your cart"
-                )
+                messages.info(request, "You successfully delete all items from your cart")
                 return redirect("core:home")
             messages.info(request, "This item quantity has been changed")
             return redirect("core:order-summary")

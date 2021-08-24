@@ -131,7 +131,7 @@ class TestViews(TestCase):
         # Assert error when try to go at the Order Summary page without active order
         self.assertIn("Your shopping cart is empty", html)
 
-    # Testing logic in View
+# Testing logic in View
 
     @mock.patch("core.views.add_and_save_coupon_to_the_order")
     @mock.patch("core.views.get_coupon")

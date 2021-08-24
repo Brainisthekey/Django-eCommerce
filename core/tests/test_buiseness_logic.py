@@ -18,7 +18,6 @@ from core.services.business_logic import (
     create_delivered_object_item,
     delete_order_and_order_items,
 )
-import unittest
 from core.models import Adress, OrderItem
 from django.test import TestCase
 from unittest import mock
@@ -99,7 +98,7 @@ class TestBuisenessLogic(TestCase):
         # Assert function call with the correct params
         mock_change_status.assert_called_with("test", status=False)
 
-    # Actually this doesn't work, because I had a nad patch to mock!
+    # Actually this doesn't work, because I had a bad patch to mock!
 
     # @mock.patch('core.services.db_services.change_status_default_address')
     # @mock.patch('core.services.db_services.filter_and_check_default_adress')
@@ -469,9 +468,7 @@ class TestBuisenessLogic(TestCase):
             "Default adress has been changed to new",
         )
 
-    @mock.patch(
-        "core.services.business_logic.change_status_default_adress_if_not_exist"
-    )
+    @mock.patch("core.services.business_logic.change_status_default_adress_if_not_exist")
     @mock.patch("core.services.business_logic.change_status_default_address")
     def test_comprare_shipping_and_billing_adresses(
         self, mock_change_status, mock_change_status_not_exist
@@ -499,9 +496,7 @@ class TestBuisenessLogic(TestCase):
         mock_change_status.assert_called_once()
         mock_change_status_not_exist.assert_called_once()
 
-    @mock.patch(
-        "core.services.business_logic.change_status_default_adress_if_not_exist"
-    )
+    @mock.patch("core.services.business_logic.change_status_default_adress_if_not_exist")
     @mock.patch("core.services.business_logic.comprare_shipping_and_billing_adresses")
     def test_check_adress_billing_quresytet(
         self, mock_comparing_adress, mock_change_status_if_not_exist
@@ -554,9 +549,7 @@ class TestBuisenessLogic(TestCase):
 
         # Situation when User has enable option - set default billing
         mock_check_billing_address.return_value = "test_check_billing_queryset"
-        mock_filter_and_create_new_billing.return_value = (
-            "test_filtered_and_created_one"
-        )
+        mock_filter_and_create_new_billing.return_value = "test_filtered_and_created_one"
         mock_addres_shipping_queryset = mock.Mock(
             **{
                 "street_adress": "test_street_adress",
@@ -662,16 +655,14 @@ class TestBuisenessLogic(TestCase):
         mock_check_option_def_shipping.assert_called_once()
 
         # Assert that function check_option_default_shipping has returned the correct response
-        self.assertEqual(
-            mock_check_option_def_shipping(), "Added billing adress to the Order"
-        )
+        self.assertEqual(mock_check_option_def_shipping(), "Added billing adress to the Order")
 
         # Assert that fucntion check_set_default_shipping_adress has been called
         mock_check_set_default_shipping.assert_called_once()
 
-    # Testing logic for disabled both options:
-    #   Billing address is the same as my shipping address
-    #   Save as default billing address
+# Testing logic for disabled both options:
+#   Billing address is the same as my shipping address
+#   Save as default billing address
 
     @mock.patch("core.services.business_logic.validate_and_create_a_new_adress")
     def test_disabled_billing_and_default_logic(self, mock_validate_and_create_new):

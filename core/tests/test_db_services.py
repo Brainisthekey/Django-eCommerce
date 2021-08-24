@@ -39,6 +39,7 @@ from django.http.response import Http404
 
 
 class TestDBCommands(TestCase):
+
     def setUp(self):
         self.user = User.objects.create_user(
             "testusername", "test@test.com", "testpassword"
@@ -98,7 +99,7 @@ class TestDBCommands(TestCase):
             coupon=self.coupon,
         )
 
-    # Testing query to model Item
+# Testing query to model Item
 
     def test_filtering_items_by_caegories(self):
         """Test query filtering to model Item"""
@@ -130,7 +131,7 @@ class TestDBCommands(TestCase):
             filtering_items_by_icontains_filter(query="test").first().title, "test"
         )
 
-    # Testing query to model Order
+# Testing query to model Order
 
     def test_get_order_objects(self):
         """Test query to get object from Order model"""
@@ -227,7 +228,7 @@ class TestDBCommands(TestCase):
         # Check that Order doesn't exist
         self.assertEqual(Order.objects.all().count(), 0)
 
-    # Testing query to model OrderItem
+# Testing query to model OrderItem
 
     def test_get_all_objects_from_order_items(self):
         """Test query to GET all object from the order"""
@@ -376,7 +377,7 @@ class TestDBCommands(TestCase):
         # Assert that order does have this coupon
         self.assertEqual(self.order.coupon, self.coupon)
 
-    # Testing query to model Adress
+# Testing query to model Adress
 
     def test_filter_and_check_default_adress(self):
         """Test query to filter and check default adresses"""
