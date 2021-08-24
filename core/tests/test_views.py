@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.http.request import HttpRequest
 from core.views import SearchResult
 from django.test import TestCase, Client
@@ -149,9 +150,7 @@ class TestViews(TestCase):
         """Test for AddCouponView"""
 
         def send_post_add_coupon_request():
-            response = self.c.post(
-                reverse("core:add-coupon"), follow=True, data={"code": "test_coupon"}
-            )
+            response = self.c.post(reverse("core:add-coupon"), follow=True, data={"code": "test_coupon"})
             return response.content.decode("utf-8")
 
         # #Situation where User pass incorect date in form - invalid form
@@ -199,9 +198,7 @@ class TestViews(TestCase):
         """Testing RomanceView"""
 
         def send_get_request_to_filtered_home_page(path, context):
-            response = self.c.get(
-                reverse(f"core:{path}"), data={"items": context}, follow=True
-            )
+            response = self.c.get(reverse(f"core:{path}"), data={"items": context}, follow=True)
             return response.content.decode("utf-8")
 
         # Get context to pass into teplate
@@ -231,7 +228,7 @@ class TestViews(TestCase):
             
     @mock.patch('core.views.filtering_items_by_icontains_filter')
     def test_search_result(self, mock_filtering_items):
-        """Test SearchResultView"""
+        """Test SearchResult view"""
 
         #Mocking request.get
         mock_request_get = mock.Mock(
@@ -247,10 +244,94 @@ class TestViews(TestCase):
         #Assert that query return the correct value
         self.assertEqual(mock_request_get.GET.get('q'), 'test_item')
 
-        # request = RequestFactory().get('/search/?q=test_product')
-        # self.assertEqual(SearchResult.get_queryset(), 'test_item')
 
 
+    @mock.patch('core.views.filter_and_check_default_adress')
+    @mock.patch('core.views.get_order_objects')
+    def test_get_check_out_view(
+        self,
+        mock_get_order,
+        mock_filter_check_default
+    ):
+        """Test CheckOut view"""
+
+        # Situation when user has the default billing and shipping address
+        mock_get_order.return_value = 'test_order'
+        mock_filter_check_default.return_value = 'test_default_address'
+
+        request = self.c.get(reverse('core:checkout'))
+        html = request.content.decode('utf-8')
+        self.assertIn('Use default shipping address', html)
+        self.assertIn('Use default billing address', html)
+
+        #Situation when user doensn't have default address
+        mock_filter_check_default.return_value = None
+
+        request = self.c.get(reverse('core:checkout'))
+        html = request.content.decode('utf-8')
+        self.assertNotIn('Use default shipping address', html)
+        self.assertNotIn('Use default billing address', html)
+
+        # Situation when user doesn't have an active order
+        mock_get_order.side_effect = ObjectDoesNotExist()
+
+        request = self.c.get(reverse('core:checkout'), follow=True)
+        html = request.content.decode('utf-8')
+        
+        # Assert that specyfic error has been called
+        self.assertIn('You do not have an active order', html)
+
+        #Assert redirect from checkout page if user doesn't have an acitve order
+        self.assertRedirects(self.c.get(reverse('core:checkout'), follow=True), '/')
+
+
+    @mock.patch('core.views.get_order_objects')
+    @mock.patch('core.views.add_item_to_the_order')
+    @mock.patch('core.views.change_order_quantity')
+    @mock.patch('core.views.filter_order_item_objects_by_slag')
+    @mock.patch('core.views.filter_order_objects')
+    @mock.patch('core.views.get_order_item_or_create')
+    
+    def test_add_to_cart(
+        self,
+        mock_get_or_create_item,
+        mock_filter_order,
+        mock_filter_order_item,
+        mock_change_order_quantity,
+        mock_add_item_to_order,
+        mock_get_order
+    ):
+        def send_get_request_to_add_to_cart():
+            request = self.c.get(reverse('core:add-to-cart', kwargs={'slug': 'verity'}), follow=True)
+            return request.content.decode('utf-8')
+
+        """Test add_to_cart functionality"""
+        # Situation when user doesn't have an active order
+        mock_filter_order.return_value = None
+
+        # Assert response correctess
+        self.assertIn('This item was aded tou your cart', send_get_request_to_add_to_cart())
+
+        #Situation when user has active order but can't filtered order_item_by_slug
+        mock_filter_order.return_value = 'test_filtered_order'
+        mock_filter_order_item.return_value = None
+
+        # Assert response correctess
+        self.assertIn('This item was aded tou your cart', send_get_request_to_add_to_cart())
+
+        # Situation when user has an active order and this special item on the order
+        mock_filter_order_item.return_value = 'test_filtered_item'
+        self.assertIn('This item quantity was updated', send_get_request_to_add_to_cart())
+
+    
+
+
+
+
+
+
+
+    
 
 class TestViewsAnonimousUser(TestCase):
     @classmethod

@@ -81,9 +81,7 @@ class AddCouponView(View):
                 return redirect("core:checkout")
             if get_coupon(code):
                 add_and_save_coupon_to_the_order(order=order, code=code)
-                messages.success(
-                    self.request, "This coupon was successfully added to your order"
-                )
+                messages.success(self.request, "This coupon was successfully added to your order")
                 return redirect("core:checkout")
             messages.warning(self.request, "Coupon validation error")
             return redirect("core:checkout")
@@ -160,7 +158,6 @@ class CheckoutView(LoginRequiredMixin, View):
             )
             if billing_address_queryset:
                 context.update({"default_billing_address": billing_address_queryset})
-
             return render(self.request, "checkout-page.html", context=context)
         except ObjectDoesNotExist:
             messages.info(self.request, "You do not have an active order")
