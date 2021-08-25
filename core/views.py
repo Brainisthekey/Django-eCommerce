@@ -185,10 +185,7 @@ class CheckoutView(LoginRequiredMixin, View):
             use_default_billing = form.cleaned_data.get("use_default_billing")
 
             if same_billing_address and use_default_billing:
-                messages.info(
-                    self.request,
-                    "You can not use 2 options at the same time <It is brake the logic>",
-                )
+                messages.info(self.request,"You can not use 2 options at the same time <It is brake the logic>")
                 return redirect("core:checkout")
 
             shipping_adress_or_error = default_shipping_adress(

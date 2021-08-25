@@ -42,9 +42,7 @@ class TestBuisenessLogic(TestCase):
         mock_queryset = mock.Mock(spec=OrderItem.objects)
         mock_queryset.all.return_value = mock_queryset
         mock_response = mock.Mock(**{"quantity": 2, "item.title": "test"})
-        self.assertEqual(
-            get_information_about_order([mock_response]), (2, [[2, "test"]])
-        )
+        self.assertEqual(get_information_about_order([mock_response]), (2, [[2, "test"]]))
 
     @mock.patch("core.services.business_logic.get_information_about_order")
     def test_convert_order_items_into_string_view(self, mock_info_order):
@@ -52,9 +50,7 @@ class TestBuisenessLogic(TestCase):
         mock_info_order.return_value = (2, [[2, "test"]])
 
         # Assert that function convert Order to the string
-        self.assertEqual(
-            convert_order_items_into_string_view(orders="test"), "1. test x 2"
-        )
+        self.assertEqual(convert_order_items_into_string_view(orders="test"), "1. test x 2")
 
     # Test for buiseness logic checkout view
 
@@ -98,20 +94,7 @@ class TestBuisenessLogic(TestCase):
         # Assert function call with the correct params
         mock_change_status.assert_called_with("test", status=False)
 
-    # Actually this doesn't work, because I had a bad patch to mock!
-
-    # @mock.patch('core.services.db_services.change_status_default_address')
-    # @mock.patch('core.services.db_services.filter_and_check_default_adress')
-    # def test_check_option_set_default(self, mock_filter_and_check, mock_default_adress):
-    #     """
-    #     Test the various options:
-    #     Enabled options default adress or not
-    #     """
-    #     mock_filter_and_check.return_value = mock.Mock()
-    #     mock_default_adress.return_value = mock.Mock()
-
-    #     self.assertEqual(check_option_set_default(set_default_shipping='test', shipping_adress='B', user='1', adress_type='B'), 'test1')
-
+    
     @mock.patch("core.services.business_logic.check_option_set_default")
     @mock.patch("core.services.business_logic.add_shipping_adress_to_the_order")
     @mock.patch("core.services.business_logic.create_a_new_address")
@@ -251,9 +234,7 @@ class TestBuisenessLogic(TestCase):
         """Test checking enabled options - use defalt shipping adress"""
 
         # Situation when user use default shipping address
-        mock_check_default_shipping.return_value = (
-            "User use the default shipping adress"
-        )
+        mock_check_default_shipping.return_value = "User use the default shipping adress"
 
         # Assert output user use default shipping adress
         self.assertEqual(

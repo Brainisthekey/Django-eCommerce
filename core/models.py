@@ -105,9 +105,7 @@ class Order(models.Model):
         blank=True,
         related_name="shipping_adress",
     )
-    coupon = models.ForeignKey(
-        "Coupon", on_delete=models.SET_NULL, null=True, blank=True
-    )
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True)
 
     def get_total(self):
         """Get total sum of the order"""
