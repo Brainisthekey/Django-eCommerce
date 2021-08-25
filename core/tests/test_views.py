@@ -323,15 +323,6 @@ class TestViews(TestCase):
         mock_filter_order_item.return_value = 'test_filtered_item'
         self.assertIn('This item quantity was updated', send_get_request_to_add_to_cart())
 
-    
-
-
-
-
-
-
-
-    
 
 class TestViewsAnonimousUser(TestCase):
     @classmethod
