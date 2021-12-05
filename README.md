@@ -1,5 +1,3 @@
-![Header](https://github.com/Brainisthekey/flask-app/blob/master/data/img/library.png)
-
 # Django E-commerce Application
 
 Simple Django application like a regular [E-commerce](https://en.wikipedia.org/wiki/E-commerce) books shop.
