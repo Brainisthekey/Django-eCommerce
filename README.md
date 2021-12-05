@@ -19,8 +19,9 @@ The website displays products - **Books**. Users can add and remove products to/
     - Promo codes
 
 ## Tests
-
 All functionality covered in tests
+![Header](https://github.com/Brainisthekey/Github_images/blob/master/e_comerce_test_coverage.png)
+![Header](https://github.com/Brainisthekey/Github_images/blob/master/e_commerce_coverage_raport.png)
 
 ## View
 
